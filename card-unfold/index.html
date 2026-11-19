@@ -12,7 +12,6 @@
     --font-display: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
     --font-body: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
     --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-    --art-filter: grayscale(1) contrast(1.15) brightness(.55);
   }
   [data-theme="hijinx"] {
     --bg: #F7F8F6; --ink: #52489C; --surface: #D4DCEF; --accent: #E5E460; --accent-2: #F8E49B;
@@ -20,7 +19,6 @@
     --font-display: "Bricolage Grotesque", system-ui, sans-serif;
     --font-body: "IBM Plex Sans", system-ui, sans-serif;
     --font-mono: "Space Mono", ui-monospace, monospace;
-    --art-filter: none;
   }
 
   * { box-sizing: border-box; }
@@ -61,7 +59,10 @@
   .row { position: relative; padding: calc(24px * var(--k, 1)); display: flex; }
   .row-1 { justify-content: space-between; align-items: flex-start; }
   .row-1 .label { color: var(--ink); font-size: max(11px, calc(11px * var(--k, 1))); }
-  .row-2 img { position: absolute; top: -15%; left: 4%; width: 92%; height: 130%; object-fit: contain; filter: var(--art-filter); }
+  .row-2 .art { position: absolute; top: -15%; left: 4%; width: 92%; height: 130%; object-fit: contain; color: var(--ink); }
+  .row-2 svg.art { top: -5%; height: 110%; }
+  /* each theme brings its own art */
+  [data-theme="neutral"] .art-hijinx, [data-theme="hijinx"] .art-neutral { display: none; }
   .row-3 { flex-direction: column; justify-content: flex-end; gap: calc(10px * var(--k, 1)); }
   .card-title { font: 500 calc(34px * var(--k, 1))/1.02 var(--font-display); letter-spacing: -.025em; margin: 0; text-wrap: balance; max-width: 18ch; }
   .card-cap { font: 400 max(11px, calc(11px * var(--k, 1)))/1.4 var(--font-mono); letter-spacing: .14em; text-transform: uppercase; }
@@ -113,10 +114,13 @@
     </footer>
   </div>
 
-  <!-- the card face. edit this; it's copied into all three panels -->
+  <!-- the card face. edit this; it's copied into all three panels. each theme shows its own art -->
   <template id="sheetTpl">
     <div class="row row-1"><span class="label">01 — Fold</span><span class="label">Card unfold</span></div>
-    <div class="row row-2"><img alt="" src="../assets/disco-ball-ascii.webp"></div>
+    <div class="row row-2">
+      <svg class="art art-neutral" viewBox="0 0 200 200" fill="none" stroke="currentColor" aria-hidden="true"><g vector-effect="non-scaling-stroke" stroke-width="1"><circle cx="100" cy="100" r="90" vector-effect="non-scaling-stroke"/><ellipse cx="100" cy="100" rx="60" ry="90" vector-effect="non-scaling-stroke"/><ellipse cx="100" cy="100" rx="30" ry="90" vector-effect="non-scaling-stroke"/><line x1="100" y1="10" x2="100" y2="190" vector-effect="non-scaling-stroke"/><ellipse cx="100" cy="40" rx="67.1" ry="10.7" vector-effect="non-scaling-stroke"/><ellipse cx="100" cy="70" rx="84.9" ry="13.6" vector-effect="non-scaling-stroke"/><ellipse cx="100" cy="100" rx="90.0" ry="14.4" vector-effect="non-scaling-stroke"/><ellipse cx="100" cy="130" rx="84.9" ry="13.6" vector-effect="non-scaling-stroke"/><ellipse cx="100" cy="160" rx="67.1" ry="10.7" vector-effect="non-scaling-stroke"/></g></svg>
+      <img class="art art-hijinx" alt="" src="../assets/disco-ball-ascii.webp">
+    </div>
     <div class="row row-3"><p class="card-title">Open it up slowly</p><span class="card-cap">A motion study in three panels</span></div>
   </template>
 
@@ -130,6 +134,7 @@
     document.head.appendChild(l); };
   const set = t => { root.dataset.theme = t; btn.textContent = 'Theme: ' + t; if (t === 'hijinx') fonts(); };
   if (location.hash === '#hijinx') set('hijinx');
+  addEventListener('hashchange', () => set(location.hash === '#hijinx' ? 'hijinx' : 'neutral'));
   btn.addEventListener('click', () => set(root.dataset.theme === 'hijinx' ? 'neutral' : 'hijinx'));
 })();
 
@@ -162,8 +167,9 @@
     const bot = ease(seg(p, .28, .54));    // then the bottom flap
     const grow = ease(seg(p, .60, .92));   // then the card fills the screen
 
-    pTop.style.transform = `translateZ(2px) rotateX(${-180 * (1 - top)}deg)`;
-    pBot.style.transform = `translateZ(1px) rotateX(${180 * (1 - bot)}deg)`;
+    // the small z-offset keeps folded flaps from flickering; it drops to 0 when open so the seams line up
+    pTop.style.transform = `translateZ(${2 * (1 - top)}px) rotateX(${-180 * (1 - top)}deg)`;
+    pBot.style.transform = `translateZ(${1 - bot}px) rotateX(${180 * (1 - bot)}deg)`;
     shades[0].style.opacity = (Math.sin(Math.PI * top) * .35).toFixed(3);
     shades[1].style.opacity = (Math.sin(Math.PI * bot) * .35).toFixed(3);
 

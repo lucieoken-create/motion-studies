@@ -89,6 +89,7 @@
     document.querySelectorAll('.study').forEach(a => a.hash = t === 'hijinx' ? 'hijinx' : '');
     document.querySelectorAll('[data-preview]').forEach(img => img.src = `previews/${img.dataset.preview}-${t}.gif`); };
   if (location.hash === '#hijinx') set('hijinx');
+  addEventListener('hashchange', () => set(location.hash === '#hijinx' ? 'hijinx' : 'neutral'));
   btn.addEventListener('click', () => set(root.dataset.theme === 'hijinx' ? 'neutral' : 'hijinx'));
 })();
 </script>

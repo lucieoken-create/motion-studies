@@ -12,8 +12,8 @@
     --font-display: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
     --font-body: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
     --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-    --art-filter: grayscale(1) contrast(1.1);
     --back-mark: "◆";
+    --back-pattern: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10'%3E%3Cpath d='M0 0L10 10M10 0L0 10' stroke='%23FFFFFF' stroke-opacity='.16' stroke-width='1'/%3E%3C/svg%3E");
   }
   [data-theme="hijinx"] {
     --bg: #F7F8F6; --ink: #52489C; --surface: #D4DCEF; --accent: #E5E460; --accent-2: #F8E49B;
@@ -21,8 +21,8 @@
     --font-display: "Bricolage Grotesque", system-ui, sans-serif;
     --font-body: "IBM Plex Sans", system-ui, sans-serif;
     --font-mono: "Space Mono", ui-monospace, monospace;
-    --art-filter: none;
     --back-mark: "h";
+    --back-pattern: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14'%3E%3Crect x='5' y='5' width='4' height='4' fill='%23FFFFFF' fill-opacity='.22' transform='rotate(45 7 7)'/%3E%3C/svg%3E");
   }
 
   * { box-sizing: border-box; }
@@ -50,9 +50,9 @@
   .face { position: absolute; inset: 0; overflow: hidden; backface-visibility: hidden; -webkit-backface-visibility: hidden; box-shadow: var(--sh, 0 0 0 transparent); }
   .front { background: var(--surface); }
   /* each card shows its own quarter of one wide photo */
-  .front img { position: absolute; top: 0; height: 100%; width: 400%; max-width: none; object-fit: cover; filter: var(--art-filter); }
+  .front img { position: absolute; top: 0; height: 100%; width: 400%; max-width: none; object-fit: cover; }
   .back { transform: rotateY(180deg); background-color: var(--ink);
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14'%3E%3Crect x='5' y='5' width='4' height='4' fill='%23FFFFFF' fill-opacity='.22' transform='rotate(45 7 7)'/%3E%3C/svg%3E"); }
+    background-image: var(--back-pattern); }
   .back::before { content: ""; position: absolute; inset: calc(8px * var(--k, 1)); border: 1px solid rgba(255,255,255,.45); }
   .back .mark { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: calc(64px * var(--k, 1)); height: calc(64px * var(--k, 1)); background: var(--ink); border: 1px solid rgba(255,255,255,.45); display: grid; place-items: center; font: 500 calc(36px * var(--k, 1))/1 var(--font-display); color: var(--bg); }
   .back .mark::after { content: var(--back-mark); }
@@ -106,14 +106,31 @@
     const l = document.createElement('link'); l.id = 'hjFonts'; l.rel = 'stylesheet';
     l.href = 'https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500&family=IBM+Plex+Sans:wght@400;500&family=Space+Mono&display=swap';
     document.head.appendChild(l); };
-  const set = t => { root.dataset.theme = t; btn.textContent = 'Theme: ' + t; if (t === 'hijinx') fonts(); };
+  const set = t => { root.dataset.theme = t; btn.textContent = 'Theme: ' + t; if (t === 'hijinx') fonts();
+    document.dispatchEvent(new CustomEvent('themechange', { detail: t })); };
   if (location.hash === '#hijinx') set('hijinx');
+  addEventListener('hashchange', () => set(location.hash === '#hijinx' ? 'hijinx' : 'neutral'));
   btn.addEventListener('click', () => set(root.dataset.theme === 'hijinx' ? 'neutral' : 'hijinx'));
 })();
 
 /* the study */
 (() => {
-  const PHOTO = '../assets/marble-bust.webp';   // any wide photo works; about 3:1 crops best
+  // the picture on the card fronts. any wide image works; about 3:1 crops best.
+  // neutral draws a flat landscape in code, so there's no image file to license.
+  const LANDSCAPE = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1584 600" preserveAspectRatio="xMidYMid slice">
+    <rect width="1584" height="600" fill="#E2E2DD"/>
+    <circle cx="1130" cy="200" r="92" fill="#C9C9C2"/>
+    <path d="M0 330 C180 250 330 300 470 260 C640 210 760 300 930 270 C1110 240 1250 180 1400 230 C1490 260 1540 250 1584 240 V600 H0Z" fill="#B9B9B2"/>
+    <path d="M0 400 C150 350 300 380 450 340 C620 300 760 380 960 360 C1150 340 1300 300 1584 350 V600 H0Z" fill="#8C8C86"/>
+    <path d="M0 480 C200 430 380 470 560 440 C760 410 900 470 1100 455 C1300 440 1450 420 1584 445 V600 H0Z" fill="#4C4C50"/>
+    <path d="M0 560 C260 530 520 555 800 540 C1080 525 1340 545 1584 535 V600 H0Z" fill="#18181B"/>
+  </svg>`;
+  const PHOTOS = {
+    neutral: 'data:image/svg+xml,' + encodeURIComponent(LANDSCAPE),
+    hijinx: '../assets/marble-bust.webp',
+  };
+  let userPhoto = null;                          // set by "Try it with your own photo"
+  const photo = () => userPhoto || PHOTOS[document.documentElement.dataset.theme] || PHOTOS.neutral;
   const N = 4;                                   // number of cards
   const FAN_R = [-9, -3, 3, 9], FAN_Y = [22, 4, 4, 22];   // the hand at the end: rotation and drop per card
 
@@ -124,15 +141,16 @@
   for (let i = 0; i < N; i++) {
     const c = document.createElement('div');
     c.className = 'pc';
-    c.innerHTML = `<div class="face front"><img alt="" src="${PHOTO}" style="left:${-i * 100}%"></div>
+    c.innerHTML = `<div class="face front"><img alt="" src="${photo()}" style="left:${-i * 100}%"></div>
       <div class="face back"><span class="idx tl"></span><span class="mark"></span><span class="idx br"></span></div>`;
     deck.appendChild(c); cards.push(c);
   }
   document.getElementById('swap').addEventListener('change', e => {
     const f = e.target.files && e.target.files[0]; if (!f) return;
-    const url = URL.createObjectURL(f);
-    deck.querySelectorAll('.front img').forEach(img => img.src = url);
+    userPhoto = URL.createObjectURL(f);
+    deck.querySelectorAll('.front img').forEach(img => img.src = userPhoto);
   });
+  document.addEventListener('themechange', () => deck.querySelectorAll('.front img').forEach(img => img.src = photo()));
 
   const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
   const seg = (p, a, b) => clamp((p - a) / (b - a));                    // a slice of scroll progress, as 0..1
@@ -143,7 +161,7 @@
   const size = () => {
     DW = Math.min(960, innerWidth - 120);
     GAP = Math.min(28, DW * .03);
-    CW = (DW - (N - 1) * GAP) / N;
+    CW = Math.floor((DW - (N - 1) * GAP) / N);   // whole pixels, so no hairline seams between strips
     CH = CW * 1.42;                                // 1.42 = playing card shape
   };
 

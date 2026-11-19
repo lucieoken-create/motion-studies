@@ -16,7 +16,7 @@ Each study in this repo is one self-contained HTML file: a sticky stage inside a
 
 1. **Read the study file first.** Keep its structure: the tall section (`height: 420vh`), the sticky `.stage`, and the `render()` function that reads scroll progress.
 2. **Map the theme variables to the project's tokens.** Every color and font comes from the variables at the top of the stylesheet (`--bg`, `--ink`, `--surface`, `--accent`, `--accent-2`, `--muted`, `--dark`, the three `--font-*` variables, `--back-mark`). Point them at the project's own tokens; don't hard-code new colors further down. If the project has a design system or DESIGN.md, read it before choosing values.
-3. **Swap the content.** Card unfold: edit the `<template id="sheetTpl">` (three rows, one per panel). Card flip: set `PHOTO` to a wide image, about 3:1, and change `N` for more or fewer cards (also extend `FAN_R` and `FAN_Y` to match).
+3. **Swap the content.** Card unfold: edit the `<template id="sheetTpl">` (three rows, one per panel). Card flip: set the `PHOTOS` entry for your theme to a wide image, about 3:1, and change `N` for more or fewer cards (also extend `FAN_R` and `FAN_Y` to match).
 4. **Port it into the project's stack.** In React or Vue, render the markup in a component and run the same `render()` logic in an effect on scroll and resize, with cleanup. Keep `requestAnimationFrame` throttling. Scope the class names if they could collide.
 5. **Retime only through the timing block.** Each step is `ease(seg(p, start, end))`. Overlapping ranges make steps blend; gaps make pauses.
 6. **Keep reduced motion.** When `prefers-reduced-motion: reduce` is set, render the end state and skip the animation.

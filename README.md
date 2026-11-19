@@ -30,14 +30,14 @@ A wide photo splits into four strips. Each strip flips over, one after another, 
 
 1. Copy the study's `index.html` (and any image it points to in `assets/`).
 2. Restyle it by changing the variables at the top of the `<style>` block: colors, fonts and the mark on the card backs. Everything else reads from them.
-3. Swap the content. The unfold's card face lives in the `<template>` near the bottom of the page; the flip's photo is the `PHOTO` line at the top of its script.
+3. Swap the content. The unfold's card face lives in the `<template>` near the bottom of the page; the flip's picture is the `PHOTOS` list at the top of its script, one per theme.
 4. Retime it. Each script has a short "timing" block where every step is a slice of scroll progress from 0 to 1. The section's `height` (420vh) sets how much scrolling the whole thing takes.
 
 Both studies respect reduced motion: people who've turned animation off in their settings see the finished state, still.
 
 ## Themes
 
-Every study ships with two themes. **Neutral** is the default. **hijinx** is the palette and type from [hijinx.studio](https://hijinx.studio). Switch with the button in the top corner, or add `#hijinx` to the URL. To add your own, copy the `[data-theme="hijinx"]` block, rename it and change the values.
+Every study ships with two themes. **Neutral** is the default. **hijinx** is the palette and type from [hijinx.studio](https://hijinx.studio). Switch with the button in the top corner, or add `#hijinx` to the URL. A theme changes the art too: neutral draws its placeholders in code (a wireframe globe, a flat landscape, a crosshatch card back), so there are no image files to license, and hijinx uses Lucie's own artwork. To add your own, copy the `[data-theme="hijinx"]` block, rename it and change the values, then add your art for that theme.
 
 ## Use them with Claude or another AI coding tool
 
@@ -49,4 +49,4 @@ Both studies draw an image once and slice it into pieces, then move the pieces w
 
 ## Credits
 
-Made by [Lucie Oken](https://hijinx.studio) of hijinx. The marble bust image and the ASCII disco ball are Lucie's own and are included under the same license. MIT licensed: use these anywhere, including client work, and keep the license notice.
+Made by [Lucie Oken](https://hijinx.studio) of hijinx. The marble bust and the ASCII disco ball in the hijinx theme are Lucie's own and are included under the same license. MIT licensed: use these anywhere, including client work, and keep the license notice.
