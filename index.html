@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="neutral">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>motion-studies</title>
+<style>
+  :root, [data-theme="neutral"] {
+    --bg: #F4F4F1; --ink: #18181B; --surface: #E2E2DD; --muted: #5F5F66; --dark: #111113;
+    --border: rgba(24,24,27,.14); --border-strong: rgba(24,24,27,.3);
+    --font-display: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    --font-body: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  [data-theme="hijinx"] {
+    --bg: #F7F8F6; --ink: #52489C; --surface: #D4DCEF; --muted: #625C94; --dark: #242038;
+    --border: rgba(82,72,156,.18); --border-strong: rgba(82,72,156,.35);
+    --font-display: "Bricolage Grotesque", system-ui, sans-serif;
+    --font-body: "IBM Plex Sans", system-ui, sans-serif;
+    --font-mono: "Space Mono", ui-monospace, monospace;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--font-body); -webkit-font-smoothing: antialiased; }
+  .wrap { max-width: 1200px; margin: 0 auto; padding: 0 32px; }
+  .label { font: 400 11px/1.4 var(--font-mono); letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+  .top { display: flex; justify-content: space-between; align-items: center; padding: 24px 0; border-bottom: 1px solid var(--border); }
+  .theme-btn { font: 400 11px/1 var(--font-mono); letter-spacing: .14em; text-transform: uppercase; color: var(--ink); background: none; border: 1px solid var(--border-strong); padding: 8px 12px; cursor: pointer; }
+  .intro { padding: 128px 0 64px; display: grid; gap: 24px; max-width: 760px; }
+  h1 { font: 500 clamp(44px, 6vw, 80px)/1.02 var(--font-display); letter-spacing: -.025em; margin: 0; }
+  .lead { font-size: 21px; line-height: 1.55; margin: 0; max-width: 58ch; }
+  .grid { display: grid; grid-template-columns: repeat(2, 1fr); border-top: 1px solid var(--border-strong); margin-bottom: 96px; }
+  .study { display: grid; gap: 16px; align-content: start; padding: 32px 32px 32px 0; color: inherit; text-decoration: none; }
+  .study + .study { padding-left: 32px; border-left: 1px solid var(--border); }
+  .study img { width: 100%; aspect-ratio: 16 / 10; object-fit: cover; background: var(--surface); display: block; }
+  .study h2 { font: 500 28px/1.1 var(--font-display); letter-spacing: -.02em; margin: 8px 0 0; }
+  .study p { font-size: 17px; line-height: 1.6; margin: 0; }
+  .go { font: 400 12px/1 var(--font-mono); letter-spacing: .1em; text-transform: uppercase; }
+  .go span { display: inline-block; transition: transform .16s; }
+  .study:hover .go span { transform: translateX(3px); }
+  .foot { display: flex; justify-content: space-between; padding: 24px 0 48px; border-top: 1px solid var(--border); }
+  .foot a { color: inherit; text-decoration: none; border-bottom: 1px solid var(--border-strong); }
+  @media (max-width: 760px) {
+    .wrap { padding: 0 24px; }
+    .grid { grid-template-columns: 1fr; }
+    .study, .study + .study { padding: 32px 0; border-left: 0; border-bottom: 1px solid var(--border); }
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="top">
+      <span class="label">motion-studies</span>
+      <button class="theme-btn" id="themeBtn">Theme: neutral</button>
+    </header>
+    <section class="intro">
+      <span class="label">Scroll-driven motion, one file each</span>
+      <h1>Motion studies</h1>
+      <p class="lead">Small scroll animations for marketing pages. Each one is a single HTML file with no libraries, so you can open it, change a few variables and drop it into your own build.</p>
+    </section>
+    <section class="grid">
+      <a class="study" href="card-unfold/">
+        <img src="previews/card-unfold.gif" alt="A card folded in three opens flap by flap, then grows to fill the screen">
+        <span class="label">01</span>
+        <h2>Card unfold</h2>
+        <p>A card folded in three opens on its hinges as you scroll, then grows until it's the page.</p>
+        <span class="go">Open the study <span>→</span></span>
+      </a>
+      <a class="study" href="card-flip/">
+        <img src="previews/card-flip.gif" alt="A wide photo splits into four strips that flip into playing cards">
+        <span class="label">02</span>
+        <h2>Card flip</h2>
+        <p>A wide photo splits into four strips that flip over one by one and land as playing cards.</p>
+        <span class="go">Open the study <span>→</span></span>
+      </a>
+    </section>
+    <footer class="foot">
+      <span class="label">Made by Lucie Oken · <a href="https://hijinx.studio">hijinx.studio</a></span>
+      <span class="label"><a href="https://github.com/lucieoken-create/motion-studies">GitHub ↗</a></span>
+    </footer>
+  </div>
+<script>
+(() => {
+  const root = document.documentElement, btn = document.getElementById('themeBtn');
+  const fonts = () => { if (document.getElementById('hjFonts')) return;
+    const l = document.createElement('link'); l.id = 'hjFonts'; l.rel = 'stylesheet';
+    l.href = 'https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500&family=IBM+Plex+Sans:wght@400;500&family=Space+Mono&display=swap';
+    document.head.appendChild(l); };
+  const set = t => { root.dataset.theme = t; btn.textContent = 'Theme: ' + t; if (t === 'hijinx') fonts();
+    document.querySelectorAll('.study').forEach(a => a.hash = t === 'hijinx' ? 'hijinx' : ''); };
+  if (location.hash === '#hijinx') set('hijinx');
+  btn.addEventListener('click', () => set(root.dataset.theme === 'hijinx' ? 'neutral' : 'hijinx'));
+})();
+</script>
+</body>
+</html>

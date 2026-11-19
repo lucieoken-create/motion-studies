@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="neutral">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Card flip · motion-studies</title>
+<style>
+  /* ---------- themes: change these variables to restyle the study ---------- */
+  :root, [data-theme="neutral"] {
+    --bg: #F4F4F1; --ink: #18181B; --surface: #E2E2DD; --accent: #F5D547; --accent-2: #F8EBB0;
+    --muted: #5F5F66; --dark: #111113; --border: rgba(24,24,27,.14); --border-strong: rgba(24,24,27,.3);
+    --font-display: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    --font-body: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    --art-filter: grayscale(1) contrast(1.1);
+    --back-mark: "◆";
+  }
+  [data-theme="hijinx"] {
+    --bg: #F7F8F6; --ink: #52489C; --surface: #D4DCEF; --accent: #E5E460; --accent-2: #F8E49B;
+    --muted: #625C94; --dark: #242038; --border: rgba(82,72,156,.18); --border-strong: rgba(82,72,156,.35);
+    --font-display: "Bricolage Grotesque", system-ui, sans-serif;
+    --font-body: "IBM Plex Sans", system-ui, sans-serif;
+    --font-mono: "Space Mono", ui-monospace, monospace;
+    --art-filter: none;
+    --back-mark: "h";
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--font-body); -webkit-font-smoothing: antialiased; }
+  .wrap { max-width: 1200px; margin: 0 auto; padding: 0 32px; }
+  .label { font: 400 11px/1.4 var(--font-mono); letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+  .top { display: flex; justify-content: space-between; align-items: center; padding: 24px 0; border-bottom: 1px solid var(--border); }
+  .top a { color: var(--ink); text-decoration: none; }
+  .theme-btn { font: 400 11px/1 var(--font-mono); letter-spacing: .14em; text-transform: uppercase; color: var(--ink); background: none; border: 1px solid var(--border-strong); padding: 8px 12px; cursor: pointer; }
+  .theme-btn:hover { border-color: var(--ink); }
+
+  .intro { padding: 128px 0 96px; display: grid; gap: 24px; max-width: 760px; }
+  .eyebrow { font: 400 12px/1.4 var(--font-mono); letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+  h1 { font: 500 clamp(44px, 6vw, 80px)/1.02 var(--font-display); letter-spacing: -.025em; margin: 0; text-wrap: balance; }
+  .lead { font-size: 21px; line-height: 1.55; margin: 0; max-width: 58ch; }
+  .swap { position: relative; display: inline-flex; gap: 8px; font: 400 12px/1 var(--font-mono); letter-spacing: .1em; text-transform: uppercase; cursor: pointer; padding-bottom: 4px; border-bottom: 1px solid var(--border-strong); width: max-content; }
+  .swap:hover { border-bottom-color: var(--ink); }
+  .swap input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+
+  /* ---------- the study ---------- */
+  .flip { position: relative; height: 420vh; }              /* scroll length: taller = slower */
+  .stage { position: sticky; top: 0; height: 100vh; overflow: hidden; display: grid; place-items: center; perspective: 1600px; }
+  .deck { position: relative; width: var(--dw, 880px); height: var(--dh, 312px); }
+  .pc { position: absolute; top: 0; left: 50%; width: var(--cw); height: 100%; margin-left: calc(var(--cw) / -2); transform-style: preserve-3d; }
+  .face { position: absolute; inset: 0; overflow: hidden; backface-visibility: hidden; -webkit-backface-visibility: hidden; box-shadow: var(--sh, 0 0 0 transparent); }
+  .front { background: var(--surface); }
+  /* each card shows its own quarter of one wide photo */
+  .front img { position: absolute; top: 0; height: 100%; width: 400%; max-width: none; object-fit: cover; filter: var(--art-filter); }
+  .back { transform: rotateY(180deg); background-color: var(--ink);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14'%3E%3Crect x='5' y='5' width='4' height='4' fill='%23FFFFFF' fill-opacity='.22' transform='rotate(45 7 7)'/%3E%3C/svg%3E"); }
+  .back::before { content: ""; position: absolute; inset: calc(8px * var(--k, 1)); border: 1px solid rgba(255,255,255,.45); }
+  .back .mark { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: calc(64px * var(--k, 1)); height: calc(64px * var(--k, 1)); background: var(--ink); border: 1px solid rgba(255,255,255,.45); display: grid; place-items: center; font: 500 calc(36px * var(--k, 1))/1 var(--font-display); color: var(--bg); }
+  .back .mark::after { content: var(--back-mark); }
+  .back .idx { position: absolute; font: 400 max(9px, calc(10px * var(--k, 1)))/1 var(--font-mono); color: var(--bg); background: var(--ink); padding: 2px 3px; }
+  .back .idx::after { content: var(--back-mark); }
+  .back .tl { top: calc(14px * var(--k, 1)); left: calc(14px * var(--k, 1)); }
+  .back .br { bottom: calc(14px * var(--k, 1)); right: calc(14px * var(--k, 1)); transform: rotate(180deg); }
+
+  .meter { position: absolute; right: 32px; bottom: 32px; display: flex; gap: 16px; align-items: center; }
+  .meter .bar { width: 120px; height: 1px; background: var(--border-strong); position: relative; }
+  .meter .bar i { position: absolute; left: 0; top: -1px; height: 3px; background: var(--ink); width: 0; }
+
+  .foot { display: flex; justify-content: space-between; padding: 24px 0 48px; border-top: 1px solid var(--border); margin-top: 96px; }
+  .foot a { color: inherit; text-decoration: none; border-bottom: 1px solid var(--border-strong); }
+  @media (max-width: 760px) { .wrap { padding: 0 24px; } .meter { display: none; } }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="top">
+      <a class="label" href="../">← motion-studies</a>
+      <button class="theme-btn" id="themeBtn">Theme: neutral</button>
+    </header>
+    <section class="intro">
+      <span class="eyebrow">Motion study · card flip</span>
+      <h1>A photo that deals itself out</h1>
+      <p class="lead">One wide photo splits into four strips. Each strip flips over, one after another, and lands as a playing card with its back showing.</p>
+      <label class="swap"><input type="file" accept="image/*" id="swap">Try it with your own photo ↑</label>
+    </section>
+  </div>
+
+  <section class="flip" id="flip">
+    <div class="stage">
+      <div class="deck" id="deck"></div>
+      <div class="meter" aria-hidden="true"><span class="label" id="phase">Whole</span><span class="bar"><i id="bar"></i></span></div>
+    </div>
+  </section>
+
+  <div class="wrap">
+    <footer class="foot">
+      <span class="label">Made by Lucie Oken · <a href="https://hijinx.studio">hijinx.studio</a></span>
+      <span class="label">MIT license</span>
+    </footer>
+  </div>
+
+<script>
+/* theme toggle: add #hijinx to the URL to open in the hijinx theme */
+(() => {
+  const root = document.documentElement, btn = document.getElementById('themeBtn');
+  const fonts = () => { if (document.getElementById('hjFonts')) return;
+    const l = document.createElement('link'); l.id = 'hjFonts'; l.rel = 'stylesheet';
+    l.href = 'https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500&family=IBM+Plex+Sans:wght@400;500&family=Space+Mono&display=swap';
+    document.head.appendChild(l); };
+  const set = t => { root.dataset.theme = t; btn.textContent = 'Theme: ' + t; if (t === 'hijinx') fonts(); };
+  if (location.hash === '#hijinx') set('hijinx');
+  btn.addEventListener('click', () => set(root.dataset.theme === 'hijinx' ? 'neutral' : 'hijinx'));
+})();
+
+/* the study */
+(() => {
+  const PHOTO = '../assets/marble-bust.webp';   // any wide photo works; about 3:1 crops best
+  const N = 4;                                   // number of cards
+  const FAN_R = [-9, -3, 3, 9], FAN_Y = [22, 4, 4, 22];   // the hand at the end: rotation and drop per card
+
+  const section = document.getElementById('flip'), deck = document.getElementById('deck');
+  const bar = document.getElementById('bar'), phase = document.getElementById('phase');
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const cards = [];
+  for (let i = 0; i < N; i++) {
+    const c = document.createElement('div');
+    c.className = 'pc';
+    c.innerHTML = `<div class="face front"><img alt="" src="${PHOTO}" style="left:${-i * 100}%"></div>
+      <div class="face back"><span class="idx tl"></span><span class="mark"></span><span class="idx br"></span></div>`;
+    deck.appendChild(c); cards.push(c);
+  }
+  document.getElementById('swap').addEventListener('change', e => {
+    const f = e.target.files && e.target.files[0]; if (!f) return;
+    const url = URL.createObjectURL(f);
+    deck.querySelectorAll('.front img').forEach(img => img.src = url);
+  });
+
+  const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
+  const seg = (p, a, b) => clamp((p - a) / (b - a));                    // a slice of scroll progress, as 0..1
+  const ease = t => t < .5 ? 4*t*t*t : 1 - Math.pow(-2*t + 2, 3) / 2;     // ease in-out cubic
+
+  let DW, CW, CH, GAP, ticking = false;
+  // leave room at the sides for the gap between cards, the lift mid-flip and the shadow
+  const size = () => {
+    DW = Math.min(960, innerWidth - 120);
+    GAP = Math.min(28, DW * .03);
+    CW = (DW - (N - 1) * GAP) / N;
+    CH = CW * 1.42;                                // 1.42 = playing card shape
+  };
+
+  function render() {
+    ticking = false;
+    const r = section.getBoundingClientRect();
+    const p = reduce ? 1 : clamp(-r.top / (r.height - innerHeight));
+
+    // timing: change these ranges to retime the study
+    const sep = ease(seg(p, .06, .28));   // strips pull apart
+    const fan = ease(seg(p, .82, .96));   // cards fan into a hand
+    const gap = sep * GAP * (1 - fan);
+    const squeeze = 1 - fan * .32;
+
+    deck.style.setProperty('--dw', (CW * N) + 'px');
+    deck.style.setProperty('--dh', CH + 'px');
+    deck.style.setProperty('--cw', CW + 'px');
+    deck.style.setProperty('--k', (CW / 220).toFixed(3));
+
+    cards.forEach((c, i) => {
+      const f = ease(seg(p, .28 + i * .08, .52 + i * .08));   // flips staggered left to right
+      const lift = Math.sin(Math.PI * f);                      // cards rise mid-flip
+      const x = (i - (N - 1) / 2) * (CW + gap) * squeeze;
+      const y = fan * (FAN_Y[i] || 0) - lift * 18;
+      c.style.transform = `translate3d(${x}px, ${y}px, ${lift * 90}px) rotateZ(${fan * (FAN_R[i] || 0)}deg) rotateY(${f * 180}deg) scale(${1 + lift * .04})`;
+      const s = (Math.max(sep, fan) * 10).toFixed(1);          // hard offset shadow, no blur
+      c.style.setProperty('--sh', `${s}px ${s}px 0 var(--dark)`);
+      c.style.zIndex = i;
+    });
+
+    bar.style.width = (p * 100) + '%';
+    phase.textContent = p < .06 ? 'Whole' : p < .28 ? 'Splitting' : p < .76 ? 'Flipping' : p < .82 ? 'Dealt' : 'Fanned';
+  }
+
+  const ask = () => { if (!ticking) { ticking = true; requestAnimationFrame(render); } };
+  size(); render();
+  addEventListener('scroll', ask, { passive: true });
+  addEventListener('resize', () => { size(); ask(); });
+})();
+</script>
+</body>
+</html>

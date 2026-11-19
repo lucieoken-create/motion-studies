@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="neutral">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Card unfold · motion-studies</title>
+<style>
+  /* ---------- themes: change these variables to restyle the study ---------- */
+  :root, [data-theme="neutral"] {
+    --bg: #F4F4F1; --ink: #18181B; --surface: #E2E2DD; --accent: #F5D547; --accent-2: #F8EBB0;
+    --muted: #5F5F66; --dark: #111113; --border: rgba(24,24,27,.14); --border-strong: rgba(24,24,27,.3);
+    --font-display: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    --font-body: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    --art-filter: grayscale(1) contrast(1.15) brightness(.55);
+  }
+  [data-theme="hijinx"] {
+    --bg: #F7F8F6; --ink: #52489C; --surface: #D4DCEF; --accent: #E5E460; --accent-2: #F8E49B;
+    --muted: #625C94; --dark: #242038; --border: rgba(82,72,156,.18); --border-strong: rgba(82,72,156,.35);
+    --font-display: "Bricolage Grotesque", system-ui, sans-serif;
+    --font-body: "IBM Plex Sans", system-ui, sans-serif;
+    --font-mono: "Space Mono", ui-monospace, monospace;
+    --art-filter: none;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--font-body); -webkit-font-smoothing: antialiased; }
+  .wrap { max-width: 1200px; margin: 0 auto; padding: 0 32px; }
+  .label { font: 400 11px/1.4 var(--font-mono); letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+  .top { display: flex; justify-content: space-between; align-items: center; padding: 24px 0; border-bottom: 1px solid var(--border); }
+  .top a { color: var(--ink); text-decoration: none; }
+  .theme-btn { font: 400 11px/1 var(--font-mono); letter-spacing: .14em; text-transform: uppercase; color: var(--ink); background: none; border: 1px solid var(--border-strong); padding: 8px 12px; cursor: pointer; }
+  .theme-btn:hover { border-color: var(--ink); }
+
+  .intro { padding: 128px 0 96px; display: grid; gap: 24px; max-width: 760px; }
+  .eyebrow { font: 400 12px/1.4 var(--font-mono); letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+  h1 { font: 500 clamp(44px, 6vw, 80px)/1.02 var(--font-display); letter-spacing: -.025em; margin: 0; text-wrap: balance; }
+  .lead { font-size: 21px; line-height: 1.55; margin: 0; max-width: 58ch; }
+  .hint { font: 400 12px/1 var(--font-mono); letter-spacing: .1em; text-transform: uppercase; display: inline-flex; gap: 8px; margin-top: 16px; }
+  .hint span { display: inline-block; animation: nudge 1.6s ease-in-out infinite; }
+  @keyframes nudge { 50% { transform: translateY(4px); } }
+
+  /* ---------- the study ---------- */
+  .unfold { position: relative; height: 420vh; }           /* scroll length: taller = slower */
+  .stage { position: sticky; top: 0; height: 100vh; overflow: hidden; display: grid; place-items: center; perspective: 1800px; perspective-origin: 50% 40%; }
+  .card { position: relative; width: var(--w, 440px); height: var(--h, 550px); transform-style: preserve-3d; }
+  .panel { position: absolute; left: 0; width: 100%; height: calc(100% / 3); transform-style: preserve-3d; }
+  .p-top { top: 0; transform-origin: 50% 100%; }
+  .p-mid { top: calc(100% / 3); }
+  .p-bot { top: calc(200% / 3); transform-origin: 50% 0%; }
+  .face { position: absolute; inset: 0; overflow: hidden; backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+  .face.back { transform: rotateX(180deg); display: flex; align-items: center; justify-content: space-between; padding: 0 24px; }
+  .p-top .back { background: var(--accent); }
+  .p-bot .back { background: var(--accent-2); }
+  .back .label { color: var(--ink); }
+  .shade { position: absolute; inset: 0; background: var(--dark); opacity: 0; pointer-events: none; }  /* flat shade, no gradient */
+
+  /* one card face, drawn once and sliced across the three panels */
+  .sheet { position: absolute; left: 0; width: 100%; height: 300%; background: var(--surface); display: grid; grid-template-rows: repeat(3, 1fr); }
+  .p-top .sheet { top: 0; } .p-mid .sheet { top: -100%; } .p-bot .sheet { top: -200%; }
+  .row { position: relative; padding: calc(24px * var(--k, 1)); display: flex; }
+  .row-1 { justify-content: space-between; align-items: flex-start; }
+  .row-1 .label { color: var(--ink); font-size: max(11px, calc(11px * var(--k, 1))); }
+  .row-2 img { position: absolute; top: -15%; left: 4%; width: 92%; height: 130%; object-fit: contain; filter: var(--art-filter); }
+  .row-3 { flex-direction: column; justify-content: flex-end; gap: calc(10px * var(--k, 1)); }
+  .card-title { font: 500 calc(34px * var(--k, 1))/1.02 var(--font-display); letter-spacing: -.025em; margin: 0; text-wrap: balance; max-width: 18ch; }
+  .card-cap { font: 400 max(11px, calc(11px * var(--k, 1)))/1.4 var(--font-mono); letter-spacing: .14em; text-transform: uppercase; }
+
+  .meter { position: absolute; right: 32px; bottom: 32px; display: flex; gap: 16px; align-items: center; }
+  .meter .bar { width: 120px; height: 1px; background: var(--border-strong); position: relative; }
+  .meter .bar i { position: absolute; left: 0; top: -1px; height: 3px; background: var(--ink); width: 0; }
+
+  .foot { display: flex; justify-content: space-between; padding: 24px 0 48px; border-top: 1px solid var(--border); margin-top: 96px; }
+  .foot a { color: inherit; text-decoration: none; border-bottom: 1px solid var(--border-strong); }
+  @media (max-width: 760px) { .wrap { padding: 0 24px; } .meter { display: none; } }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="top">
+      <a class="label" href="../">← motion-studies</a>
+      <button class="theme-btn" id="themeBtn">Theme: neutral</button>
+    </header>
+    <section class="intro">
+      <span class="eyebrow">Motion study · card unfold</span>
+      <h1>A card that opens as you scroll</h1>
+      <p class="lead">It starts folded in three. Scroll and the flaps swing open on their hinges, then the whole card grows until it's the page.</p>
+      <span class="hint">Scroll <span>↓</span></span>
+    </section>
+  </div>
+
+  <section class="unfold" id="unfold">
+    <div class="stage">
+      <div class="card" id="card">
+        <div class="panel p-top" id="pTop">
+          <div class="face front"><div class="sheet"></div><div class="shade"></div></div>
+          <div class="face back"><span class="label">Card unfold</span><span class="label">Open ↓</span></div>
+        </div>
+        <div class="panel p-mid"><div class="face front"><div class="sheet"></div></div></div>
+        <div class="panel p-bot" id="pBot">
+          <div class="face front"><div class="sheet"></div><div class="shade"></div></div>
+          <div class="face back"><span class="label">One more fold</span><span class="label">Keep going ↓</span></div>
+        </div>
+      </div>
+      <div class="meter" aria-hidden="true"><span class="label" id="phase">Folded</span><span class="bar"><i id="bar"></i></span></div>
+    </div>
+  </section>
+
+  <div class="wrap">
+    <footer class="foot">
+      <span class="label">Made by Lucie Oken · <a href="https://hijinx.studio">hijinx.studio</a></span>
+      <span class="label">MIT license</span>
+    </footer>
+  </div>
+
+  <!-- the card face. edit this; it's copied into all three panels -->
+  <template id="sheetTpl">
+    <div class="row row-1"><span class="label">01 — Fold</span><span class="label">Card unfold</span></div>
+    <div class="row row-2"><img alt="" src="../assets/disco-ball-ascii.webp"></div>
+    <div class="row row-3"><p class="card-title">Open it up slowly</p><span class="card-cap">A motion study in three panels</span></div>
+  </template>
+
+<script>
+/* theme toggle: add #hijinx to the URL to open in the hijinx theme */
+(() => {
+  const root = document.documentElement, btn = document.getElementById('themeBtn');
+  const fonts = () => { if (document.getElementById('hjFonts')) return;
+    const l = document.createElement('link'); l.id = 'hjFonts'; l.rel = 'stylesheet';
+    l.href = 'https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500&family=IBM+Plex+Sans:wght@400;500&family=Space+Mono&display=swap';
+    document.head.appendChild(l); };
+  const set = t => { root.dataset.theme = t; btn.textContent = 'Theme: ' + t; if (t === 'hijinx') fonts(); };
+  if (location.hash === '#hijinx') set('hijinx');
+  btn.addEventListener('click', () => set(root.dataset.theme === 'hijinx' ? 'neutral' : 'hijinx'));
+})();
+
+/* the study */
+(() => {
+  const tpl = document.getElementById('sheetTpl');
+  document.querySelectorAll('.sheet').forEach(s => s.appendChild(tpl.content.cloneNode(true)));
+
+  const section = document.getElementById('unfold'), card = document.getElementById('card');
+  const pTop = document.getElementById('pTop'), pBot = document.getElementById('pBot');
+  const shades = [pTop.querySelector('.shade'), pBot.querySelector('.shade')];
+  const bar = document.getElementById('bar'), phase = document.getElementById('phase');
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
+  const seg = (p, a, b) => clamp((p - a) / (b - a));                    // a slice of scroll progress, as 0..1
+  const ease = t => t < .5 ? 4*t*t*t : 1 - Math.pow(-2*t + 2, 3) / 2;     // ease in-out cubic
+  const lerp = (a, b, t) => a + (b - a) * t;
+
+  let W0, H0, ticking = false;
+  const size = () => { W0 = Math.min(440, innerWidth - 48); H0 = W0 * 1.25; };
+
+  function render() {
+    ticking = false;
+    const r = section.getBoundingClientRect();
+    const p = reduce ? .6 : clamp(-r.top / (r.height - innerHeight));
+
+    // timing: change these ranges to retime the study
+    const top = ease(seg(p, .04, .30));    // top flap opens
+    const bot = ease(seg(p, .28, .54));    // then the bottom flap
+    const grow = ease(seg(p, .60, .92));   // then the card fills the screen
+
+    pTop.style.transform = `translateZ(2px) rotateX(${-180 * (1 - top)}deg)`;
+    pBot.style.transform = `translateZ(1px) rotateX(${180 * (1 - bot)}deg)`;
+    shades[0].style.opacity = (Math.sin(Math.PI * top) * .35).toFixed(3);
+    shades[1].style.opacity = (Math.sin(Math.PI * bot) * .35).toFixed(3);
+
+    const w = lerp(W0, innerWidth, grow), h = lerp(H0, innerHeight, grow);
+    card.style.setProperty('--w', w + 'px');
+    card.style.setProperty('--h', h + 'px');
+    card.style.setProperty('--k', Math.min(w / W0, h / H0 * 1.4, 2.6).toFixed(3));  // type scales with the card
+
+    bar.style.width = (p * 100) + '%';
+    phase.textContent = p < .04 ? 'Folded' : p < .54 ? 'Unfolding' : p < .6 ? 'Open' : p < .92 ? 'Growing' : 'Full bleed';
+  }
+
+  const ask = () => { if (!ticking) { ticking = true; requestAnimationFrame(render); } };
+  size(); render();
+  addEventListener('scroll', ask, { passive: true });
+  addEventListener('resize', () => { size(); ask(); });
+})();
+</script>
+</body>
+</html>
