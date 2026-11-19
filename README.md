@@ -10,7 +10,9 @@ Small scroll animations for marketing pages. Each study is one HTML file with no
 
 A card folded in three opens on its hinges as you scroll, then grows until it fills the screen.
 
-![Card unfold](previews/card-unfold.gif)
+| Neutral (default) | hijinx theme |
+| --- | --- |
+| ![Card unfold, neutral theme](previews/card-unfold-neutral.gif) | ![Card unfold, hijinx theme](previews/card-unfold-hijinx.gif) |
 
 [Open it live](https://lucieoken-create.github.io/motion-studies/card-unfold/) · [Code](card-unfold/index.html)
 
@@ -18,7 +20,9 @@ A card folded in three opens on its hinges as you scroll, then grows until it fi
 
 A wide photo splits into four strips. Each strip flips over, one after another, and lands as a playing card with its back showing. Then the cards fan out into a hand. You can try it with your own photo right on the page.
 
-![Card flip](previews/card-flip.gif)
+| Neutral (default) | hijinx theme |
+| --- | --- |
+| ![Card flip, neutral theme](previews/card-flip-neutral.gif) | ![Card flip, hijinx theme](previews/card-flip-hijinx.gif) |
 
 [Open it live](https://lucieoken-create.github.io/motion-studies/card-flip/) · [Code](card-flip/index.html)
 

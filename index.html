@@ -59,14 +59,14 @@
     </section>
     <section class="grid">
       <a class="study" href="card-unfold/">
-        <img src="previews/card-unfold.gif" alt="A card folded in three opens flap by flap, then grows to fill the screen">
+        <img src="previews/card-unfold-neutral.gif" data-preview="card-unfold" alt="A card folded in three opens flap by flap, then grows to fill the screen">
         <span class="label">01</span>
         <h2>Card unfold</h2>
         <p>A card folded in three opens on its hinges as you scroll, then grows until it's the page.</p>
         <span class="go">Open the study <span>→</span></span>
       </a>
       <a class="study" href="card-flip/">
-        <img src="previews/card-flip.gif" alt="A wide photo splits into four strips that flip into playing cards">
+        <img src="previews/card-flip-neutral.gif" data-preview="card-flip" alt="A wide photo splits into four strips that flip into playing cards">
         <span class="label">02</span>
         <h2>Card flip</h2>
         <p>A wide photo splits into four strips that flip over one by one and land as playing cards.</p>
@@ -86,7 +86,8 @@
     l.href = 'https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500&family=IBM+Plex+Sans:wght@400;500&family=Space+Mono&display=swap';
     document.head.appendChild(l); };
   const set = t => { root.dataset.theme = t; btn.textContent = 'Theme: ' + t; if (t === 'hijinx') fonts();
-    document.querySelectorAll('.study').forEach(a => a.hash = t === 'hijinx' ? 'hijinx' : ''); };
+    document.querySelectorAll('.study').forEach(a => a.hash = t === 'hijinx' ? 'hijinx' : '');
+    document.querySelectorAll('[data-preview]').forEach(img => img.src = `previews/${img.dataset.preview}-${t}.gif`); };
   if (location.hash === '#hijinx') set('hijinx');
   btn.addEventListener('click', () => set(root.dataset.theme === 'hijinx' ? 'neutral' : 'hijinx'));
 })();
