@@ -114,7 +114,7 @@
   // colors and fonts are read from the theme variables, so a new theme restyles the drawing too
   const C = {};
   const readTheme = () => { const s = getComputedStyle(root);
-    for (const n of ['bg', 'ink', 'surface', 'accent', 'accent-2', 'dark', 'font-display']) C[n] = s.getPropertyValue('--' + n).trim(); };
+    for (const n of ['bg', 'ink', 'surface', 'accent', 'accent-2', 'dark', 'font-display', 'font-mono']) C[n] = s.getPropertyValue('--' + n).trim(); };
 
   let W, H;
   const size = () => { const d = Math.min(devicePixelRatio || 1, 2);

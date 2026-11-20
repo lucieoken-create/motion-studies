@@ -115,7 +115,7 @@
   // colors and fonts are read from the theme variables, so a new theme restyles the drawing too
   const C = {};
   const readTheme = () => { const s = getComputedStyle(root);
-    for (const n of ['bg', 'ink', 'surface', 'accent', 'accent-2', 'dark', 'font-display']) C[n] = s.getPropertyValue('--' + n).trim(); };
+    for (const n of ['bg', 'ink', 'surface', 'accent', 'accent-2', 'dark', 'font-display', 'font-mono']) C[n] = s.getPropertyValue('--' + n).trim(); };
 
   // two layers: the melted version, drawn pixel by pixel on a small canvas that is stretched to fit,
   // and the same circles drawn plainly on top, which fade away as the melting starts
