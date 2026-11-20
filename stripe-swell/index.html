@@ -58,7 +58,7 @@
     <section class="intro">
       <span class="eyebrow">Motion study · stripe swell</span>
       <h1>Stripes that breathe</h1>
-      <p class="lead">Bulges travel down a column of stripes, mirrored exactly left and right. Scrolling makes them swell, then widens the column until the stripes are the whole page.</p>
+      <p class="lead">Bulges drift slowly down a column of stripes, mirrored exactly left and right. Scrolling makes them swell, then widens the column until the stripes are the whole page.</p>
     </section>
   </div>
 
@@ -117,8 +117,8 @@
     W = stage.clientWidth; H = stage.clientHeight;
     canvas.width = W * d; canvas.height = H * d; ctx.setTransform(d, 0, 0, d, 0, 0); };
 
-  const K = 24;                                  // number of stripes
-  const LOOP = 20;                               // seconds before the motion repeats exactly
+  const K = 40;                                  // number of stripes
+  const LOOP = 30;                               // seconds before the motion repeats exactly
   const REST = .6;                               // the still frame shown when motion is turned off
   const PHASES = [[0, 'Rippling'], [.06, 'Swelling'], [.74, 'Flooding'], [.98, 'Full']];
   const STEP = 4;                                // one outline point every 4px down the page
@@ -134,19 +134,22 @@
   const edge = k => Math.sin((k / K - .5) * Math.PI);   // stripes get thinner toward the sides, like a cylinder
 
   function draw(p, t) {
-    // timing: change these ranges to retime the study
     const T = t / LOOP * Math.PI * 2;                   // whole-number multiples of T repeat cleanly
-    const swell = .3 + .7 * ease(seg(p, .04, .6));      // waves grow (some is always there, so it moves at rest)
+    // timing: change these ranges to retime the study
+    const swell = .45 + .55 * ease(seg(p, .04, .6));    // bulges grow (some are always there, so it moves at rest)
     const flood = ease(seg(p, .74, .98));               // the column widens to cover the stage
     const wave = swell * (1 - flood);
-    const base = lerp(Math.min(W * .14, 130), Math.min(W * .26, 300), swell);
+    const spacing = clamp(W * .155, 110, 220);          // distance from one bulge to the next
+    const slim = Math.min(W * .1, 150), reach = Math.min(W * .3, 400);   // the column at its narrowest, and how far a bulge adds to it
 
     half = [];
     for (let y = -8; y <= H + 8; y += STEP) {
-      const v = y / H * Math.PI * 2;
-      // two waves of different lengths, both sliding down the column. the same width is used on
-      // both sides of the center line, so left and right are exact mirrors.
-      const w = base * (1 + wave * (.55 * Math.sin(v * 2.5 - T * 3 - p * 9) + .3 * Math.sin(v * 5.3 - T * 5 - p * 9)));
+      const a = y / spacing * Math.PI - T - p * 7;      // slides down the column over time, and as you scroll
+      // each bulge narrows to a rounded tip, and the pinch between two bulges is a wide curve
+      const bulge = 1 - Math.sqrt(Math.sin(a) * Math.sin(a) * .88 + .12);
+      // a second, longer wave makes some bulges big and some small. the same width is used on both
+      // sides of the center line, so left and right are exact mirrors.
+      const w = slim + wave * reach * bulge / .65 * (.68 + .32 * Math.sin(y / spacing * 1.7 - T));
       half.push(lerp(w, W * .82, flood));
     }
 

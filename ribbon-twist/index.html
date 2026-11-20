@@ -118,7 +118,7 @@
     canvas.width = W * d; canvas.height = H * d; ctx.setTransform(d, 0, 0, d, 0, 0); };
 
   const N = 9;                                   // number of color bands in the ribbon
-  const LOOP = 24;                               // seconds before the motion repeats exactly
+  const LOOP = 40;                               // seconds before the motion repeats exactly
   const REST = .85;                              // the still frame shown when motion is turned off
   const PHASES = [[0, 'Gliding'], [.06, 'Bending'], [.4, 'Turning'], [.85, 'Turned']];
   const STEP = 4;                                // one outline point every 4px down the page
@@ -147,14 +147,14 @@
     for (let y = -40; y <= H + 40; y += STEP) {
       const v = y / H;
       // the curves slide down the page, like skiers taking the same turns side by side
-      mid.push(W / 2 + bend * W * .17 * (.86 * Math.sin(v * 4.2 - T * 2 - p * 5) + .14 * Math.sin(v * 8.4 - T * 3 + 1)));
-      // the turn: above zero is face up, below is face down. it snaps through the middle quickly, so the
-      // ribbon is only edge-on for a moment and always reads as one piece. with no twist it never gets there.
-      const turn = Math.cos(v * 3.4 - T - p * 7) + 1.4 * (1 - twist);
-      half.push(HW * turn / Math.sqrt(turn * turn + .1));
+      mid.push(W / 2 + bend * W * .17 * (.92 * Math.sin(v * 4.2 - T - p * 3) + .08 * Math.sin(v * 8.4 - T * 2 + 1)));
+      // the turn: above zero is face up, below is face down. the ribbon narrows gently toward the point
+      // where it turns over and widens again after it. with no twist it never gets there.
+      const turn = Math.cos(v * 2.6 - T - p * 4) + 1.5 * (1 - twist);
+      half.push(HW * Math.min(1, 1.25 * turn / Math.sqrt(turn * turn + .55)));
     }
     for (let i = 0; i < mid.length; i++) {              // "across" tips with the slope, so the bands stay side by side through a bend
-      const slope = (mid[Math.min(i + 1, mid.length - 1)] - mid[Math.max(i - 1, 0)]) / (2 * STEP) * .35;
+      const slope = (mid[Math.min(i + 1, mid.length - 1)] - mid[Math.max(i - 1, 0)]) / (2 * STEP) * .2;
       const len = Math.hypot(1, slope); lean.push([1 / len, -slope / len]);
     }
 

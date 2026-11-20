@@ -28,7 +28,7 @@ A wide photo splits into four strips. Each strip flips over, one after another, 
 
 ### 03 · Stripe swell
 
-Bulges travel down a column of stripes, mirrored exactly left and right. Scrolling makes them swell, then widens the column until the stripes are the whole page.
+Bulges drift slowly down a column of stripes, mirrored exactly left and right. Scrolling makes them swell, then widens the column until the stripes are the whole page.
 
 | Neutral (default) | hijinx theme |
 | --- | --- |
@@ -38,7 +38,7 @@ Bulges travel down a column of stripes, mirrored exactly left and right. Scrolli
 
 ### 04 · Type cascade
 
-One word, repeated, circles like oil on water: quick in the middle, slow at the rim. The shapes around the words melt together and pull apart, while the words stay sharp. Your pointer pushes them away, and scrolling loosens the swirl. You can type your own word right on the page.
+One word, repeated, turns slowly like oil on water: quicker in the middle, slower at the rim. The swirl is lumpy, with more layers in some directions than others, like the teeth of a gear. The shapes around the words melt together and pull apart, while the words stay sharp. Your pointer pushes them away, and scrolling loosens the swirl. You can type your own word right on the page.
 
 | Neutral (default) | hijinx theme |
 | --- | --- |
@@ -48,7 +48,7 @@ One word, repeated, circles like oil on water: quick in the middle, slow at the 
 
 ### 05 · Fluid blobs
 
-Thick blobs of color rise and sink like a lava lamp, stretching into each other and shedding droplets, with a soft out-of-focus layer behind. Scrolling warms the lamp, so the blobs leave the bottom and travel. Your pointer is a droplet too.
+It starts as plain circles of color drifting past each other. Scrolling melts them: neighbors pool into thick blobs, and their colors bleed where they meet. Your pointer is a circle too.
 
 | Neutral (default) | hijinx theme |
 | --- | --- |
@@ -73,7 +73,7 @@ One ribbon of color glides down the page in slow curves. Scrolling deepens the c
 3. Swap the content. The unfold's card face lives in the `<template>` near the bottom of the page; the flip's picture is the `PHOTOS` list at the top of its script, one per theme.
 4. Retime it. Each script has a short "timing" block where every step is a slice of scroll progress from 0 to 1. The section's `height` (420vh) sets how much scrolling the whole thing takes.
 
-Studies 03 to 06 are drawn on a canvas, so there's no markup to swap. Their content is a few constants at the top of the script: the number of stripes or bands, the word in the swirl (`WORDS`, one per theme), the list of blobs, and `LOOP`, the number of seconds before the motion repeats exactly. Their colors still come from the same theme variables.
+Studies 03 to 06 are drawn on a canvas, so there's no markup to swap. Their content is a few constants at the top of the script: the number of stripes or bands, the word in the swirl (`WORDS`, one per theme), how many circles there are, and `LOOP`, the number of seconds before the motion repeats exactly. Their colors still come from the same theme variables.
 
 Every study respects reduced motion: people who've turned animation off in their settings see the finished state, still.
 
@@ -89,7 +89,7 @@ Every study ships with two themes. **Neutral** is the default. **hijinx** is the
 
 The two card studies draw an image once and slice it into pieces, then move the pieces with 3D CSS transforms. When the pieces sit flat, the seams disappear and it reads as one picture. Scroll position drives everything, so scrolling back up plays it in reverse. Depth comes from flat shades and hard offset shadows, not gradients or blur.
 
-The four canvas studies redraw every frame from two numbers: scroll progress (0 to 1) and the time in seconds. Scroll decides the big change and time adds the drift, so each one is still alive when you stop scrolling. Stripe swell and ribbon twist fill shapes between curves. Type cascade and fluid blobs are drawn pixel by pixel on a small canvas that is stretched to fit: every word or blob pushes on the pixels around it, and where the pushes add up there is liquid, which is why shapes reach for each other and merge. Those two also react to the pointer.
+The four canvas studies redraw every frame from two numbers: scroll progress (0 to 1) and the time in seconds. Scroll decides the big change and time adds the drift, so each one is still alive when you stop scrolling. Stripe swell and ribbon twist fill shapes between curves. Type cascade and fluid blobs are drawn pixel by pixel on a small canvas that is stretched to fit: every word or circle spreads into the pixels around it, the way a blur would, and then each pixel is made either solid or clear. Where two spreads overlap they add up, which is why shapes reach for each other and merge. Those two also react to the pointer.
 
 ## Credits
 

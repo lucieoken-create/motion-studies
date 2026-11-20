@@ -57,15 +57,15 @@
     </header>
     <section class="intro">
       <span class="eyebrow">Motion study · fluid blobs</span>
-      <h1>A lamp warming up</h1>
-      <p class="lead">Thick blobs of color rise and sink like a lava lamp, stretching into each other and shedding droplets. Scrolling warms the lamp, so they leave the bottom and travel. Your pointer is a droplet too.</p>
+      <h1>Circles that melt together</h1>
+      <p class="lead">It starts as plain circles drifting past each other. Scrolling melts them: neighbors pool into thick blobs, and their colors bleed where they meet. Your pointer is a circle too.</p>
     </section>
   </div>
 
   <section class="study" id="study">
     <div class="stage" id="stage">
-      <canvas id="back" aria-hidden="true"></canvas>
       <canvas id="canvas" aria-hidden="true"></canvas>
+      <canvas id="flat" aria-hidden="true"></canvas>
       <div class="meter" aria-hidden="true"><span class="label" id="phase"></span><span class="bar"><i id="bar"></i></span></div>
     </div>
   </section>
@@ -113,77 +113,78 @@
   const readTheme = () => { const s = getComputedStyle(root);
     for (const n of ['bg', 'ink', 'surface', 'accent', 'accent-2', 'dark', 'font-display']) C[n] = s.getPropertyValue('--' + n).trim(); };
 
-  // drawn pixel by pixel, so both canvases are kept small and stretched to fit. the back one is
-  // tiny on purpose: stretching it that far is what makes the far layer look out of focus.
-  const back = document.getElementById('back').getContext('2d');
-  let W, H, PX, img, bimg;
-  const size = () => {
-    PX = stage.clientWidth > 1400 ? 3 : 2;       // screen pixels per drawn pixel: raise it if this runs slowly
-    W = Math.ceil(stage.clientWidth / PX); H = Math.ceil(stage.clientHeight / PX);
-    canvas.width = W; canvas.height = H; img = ctx.createImageData(W, H);
-    back.canvas.width = Math.ceil(W / 5); back.canvas.height = Math.ceil(H / 5);
-    bimg = back.createImageData(back.canvas.width, back.canvas.height);
+  // two layers: the melted version, drawn pixel by pixel on a small canvas that is stretched to fit,
+  // and the same circles drawn plainly on top, which fade away as the melting starts
+  const flat = document.getElementById('flat').getContext('2d');
+  let W, H, PX, LW, LH, img, px32, sum, red, green, blue;
+  const size = () => { const d = Math.min(devicePixelRatio || 1, 2);
+    W = stage.clientWidth; H = stage.clientHeight;
+    flat.canvas.width = W * d; flat.canvas.height = H * d; flat.setTransform(d, 0, 0, d, 0, 0);
+    PX = W > 1400 ? 3 : 2;                        // screen pixels per melted pixel: raise it if this runs slowly
+    LW = Math.ceil(W / PX); LH = Math.ceil(H / PX); canvas.width = LW; canvas.height = LH;
+    img = ctx.createImageData(LW, LH); px32 = new Uint32Array(img.data.buffer);
+    [sum, red, green, blue] = [0, 0, 0, 0].map(() => new Float32Array(LW * LH));
   };
 
-  // the blobs: where each one lives across the stage (0..1), its size, its color and how fast it rises and sinks
-  const BLOBS = [
-    { x: .13, r: 1.15, c: 0, s: 2 }, { x: .29, r: .85, c: 1, s: 3 }, { x: .45, r: 1.2, c: 2, s: 2 },
-    { x: .61, r: .9, c: 0, s: 3 }, { x: .77, r: 1.1, c: 1, s: 2 }, { x: .90, r: .75, c: 2, s: 4 },
-  ];
-  const LOOP = 60;                               // seconds before the motion repeats exactly
-  const REST = .7;                               // the still frame shown when motion is turned off
-  const PHASES = [[0, 'Cold'], [.04, 'Warming'], [.7, 'Flowing']];
+  const PER_COLOR = 16;                          // circles of each color (there are four colors)
+  const LOOP = 90;                               // seconds before the motion repeats exactly
+  const REST = .8;                               // the still frame shown when motion is turned off
+  const PHASES = [[0, 'Circles'], [.04, 'Melting'], [.6, 'Melted']];
+
+  // the circles: each gets a fixed "random" home, size and drift, so every visit looks the same
+  const rand = n => { const v = Math.sin(n * 12.9898) * 43758.5453; return v - Math.floor(v); };
+  const CIRCLES = [];
+  for (let i = 0; i < PER_COLOR * 4; i++) CIRCLES.push({ x: rand(i * 5 + 1), y: rand(i * 5 + 2), r: .5 + rand(i * 5 + 3),
+    c: i % 4, sx: 1 + Math.floor(rand(i * 5 + 4) * 3), sy: 1 + Math.floor(rand(i * 5 + 5) * 3), ph: rand(i * 5 + 6) * 6.28 });
 
   const ptr = { x: 0, y: 0, on: false, k: 0 };
   stage.addEventListener('pointermove', e => { const r = stage.getBoundingClientRect();
-    ptr.x = (e.clientX - r.left) / PX; ptr.y = (e.clientY - r.top) / PX; ptr.on = true; });
+    ptr.x = e.clientX - r.left; ptr.y = e.clientY - r.top; ptr.on = true; });
   stage.addEventListener('pointerleave', () => ptr.on = false);
-
-  // paint one layer of liquid. every blob pushes on every pixel, more strongly up close. where the
-  // pushes add up past "edge" there is liquid, colored by whichever blobs are pushing hardest, so
-  // two colors that meet blend into each other. "soft" is how gradually the edge fades out.
-  const paint = (g, image, blobs, edge, soft) => {
-    const w = image.width, h = image.height, px = new Uint32Array(image.data.buffer), n = blobs.length;
-    for (let y = 0, i = 0; y < h; y++) for (let x = 0; x < w; x++, i++) {
-      let sum = 0, weight = 0, r = 0, gr = 0, b = 0;
-      for (let k = 0; k < n; k++) {
-        const q = blobs[k], dx = x - q[0], dy = y - q[1], f = q[2] / (dx * dx + dy * dy + 1), ff = f * f;
-        sum += f; weight += ff; r += q[3] * ff; gr += q[4] * ff; b += q[5] * ff;
-      }
-      px[i] = sum < edge ? 0 : ((clamp((sum - edge) / soft) * 255 << 24) | (b / weight << 16) | (gr / weight << 8) | (r / weight)) >>> 0;
-    }
-    g.putImageData(image, 0, 0);
-  };
 
   function draw(p, t) {
     const T = t / LOOP * Math.PI * 2;                   // whole-number multiples of T repeat cleanly
     // timing: change this range to retime the study
-    const heat = ease(seg(p, .04, .7));                 // cold: pooled along the bottom. warm: traveling the whole height
-    const unit = Math.min(W, H);
-    ptr.k += ((ptr.on && !reduce ? 1 : 0) - ptr.k) * .08;   // the pointer's droplet fades in and out
+    const melt = ease(seg(p, .04, .6));                 // 0 = separate circles, 1 = fully melted
+    ptr.k += ((ptr.on && !reduce ? 1 : 0) - ptr.k) * .08;   // the pointer's circle fades in and out
 
-    const fill = [C.accent, C.surface, C['accent-2']].map(rgb);
-    const blobs = [];                                   // each: x, y, radius squared, red, green, blue
-    BLOBS.forEach((d, i) => {
-      const bob = Math.sin(T * d.s + i * 2.4);          // -1..1: this blob's slow rise and fall
-      let x = (d.x + .09 * Math.sin(T * (d.s - 1) + i * 1.7)) * W;
-      let y = lerp(.82 + .07 * bob, .5 + .4 * bob, heat) * H;
-      x += (ptr.x - x) * .12 * ptr.k; y += (ptr.y - y) * .12 * ptr.k;      // lean toward the pointer
-      const r = d.r * unit * lerp(.125, .145, heat), c = fill[d.c];
-      blobs.push([x, y, r * r, ...c]);
-      // a droplet: it drifts out of its blob on a stretching neck, snaps off, and later falls back in
-      const out = Math.max(0, Math.sin(T * (d.s + 2) + i * 4.1)) * lerp(1.3, 2.3, heat) * r, a = i * 2.1 + T;
-      blobs.push([x + Math.cos(a) * out, y + Math.sin(a) * out, r * r * .1, ...c]);
+    // where every circle is right now: x, y, radius, color
+    const fill = [C.accent, C.surface, C['accent-2'], mix(C.ink, C.bg, .35)];
+    const unit = Math.sqrt(W * H) * .054;
+    const circles = CIRCLES.map(c => {
+      let x = (c.x * 1.1 - .05 + .09 * Math.sin(T * c.sx + c.ph)) * W;
+      let y = (c.y * 1.1 - .05 + .09 * Math.cos(T * c.sy + c.ph * 2)) * H;
+      x += (ptr.x - x) * .1 * ptr.k; y += (ptr.y - y) * .1 * ptr.k;        // lean toward the pointer
+      return [x, y, c.r * unit, fill[c.c]];
     });
-    blobs.push([ptr.x, ptr.y, Math.pow(unit * .075 * ptr.k, 2), ...rgb(C.bg)]);
-    paint(ctx, img, blobs, 1, .06);
+    circles.push([ptr.x, ptr.y, unit * 1.3 * ptr.k, C.bg]);
 
-    // the far layer: a few big slow blobs in one dim color, with a very soft edge
-    const bw = bimg.width, bh = bimg.height, dim = rgb(mix(C.dark, mix(C.ink, C.surface, .4), .34)), far = [];
-    for (let k = 0; k < 4; k++) far.push([
-      bw * (.14 + .24 * k + .07 * Math.sin(T * 2 + k * 2)), bh * (.5 + .36 * Math.sin(T * (1 + k % 2) + k * 1.9)),
-      Math.pow(Math.min(bw, bh) * (.15 + .03 * (k % 2)), 2), ...dim]);
-    paint(back, bimg, far, .9, .5);
+    // layer one: plain circles, fading out as the melt begins
+    flat.canvas.style.opacity = 1 - seg(melt, 0, .35);
+    flat.clearRect(0, 0, W, H);
+    for (const [x, y, r, color] of circles) { flat.fillStyle = color; flat.beginPath(); flat.arc(x, y, r, 0, 7); flat.fill(); }
+
+    // layer two: the melt. each circle spreads its color into the pixels around it, strongest at its
+    // center and fading to nothing at "reach" times its radius. this is the same thing a blur does.
+    const reach = lerp(1.15, 2.1, melt);
+    for (const a of [sum, red, green, blue]) a.fill(0);
+    for (const [x, y, r, color] of circles) {
+      const cx = x / PX, cy = y / PX, far = r * reach / PX, [cr, cg, cb] = rgb(color);
+      if (far < 1) continue;
+      for (let py = Math.max(0, Math.floor(cy - far)); py <= Math.min(LH - 1, cy + far); py++)
+        for (let qx = Math.max(0, Math.floor(cx - far)); qx <= Math.min(LW - 1, cx + far); qx++) {
+          let k = 1 - ((qx - cx) * (qx - cx) + (py - cy) * (py - cy)) / (far * far);
+          if (k > 0) { k *= k; const i = py * LW + qx; sum[i] += k; red[i] += k * cr; green[i] += k * cg; blue[i] += k * cb; }
+        }
+    }
+    // then every pixel is made either solid or clear. "edge" is set so a circle on its own keeps its size,
+    // while two that are close add up past the edge and join. the color is the mix of whatever reached it.
+    const edge = Math.pow(1 - 1 / (reach * reach), 2);
+    for (let i = 0; i < sum.length; i++) {
+      const v = sum[i];
+      px32[i] = v < edge ? 0 : ((clamp((v - edge) / (edge * .04 + .006)) * 255 << 24) | (blue[i] / v << 16) | (green[i] / v << 8) | (red[i] / v)) >>> 0;
+    }
+    ctx.putImageData(img, 0, 0);
   }
 
 

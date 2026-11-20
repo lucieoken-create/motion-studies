@@ -61,7 +61,7 @@
     <section class="intro">
       <span class="eyebrow">Motion study · type cascade</span>
       <h1>A word caught in a swirl</h1>
-      <p class="lead">One word, repeated, circles like oil on water: quick in the middle, slow at the rim. The shapes around the words melt together and pull apart. Your pointer pushes them away, and scrolling loosens the swirl.</p>
+      <p class="lead">One word, repeated, circles like oil on water: quicker in the middle, slower at the rim. The shapes around the words melt together and pull apart. Your pointer pushes them away, and scrolling loosens the swirl.</p>
       <label class="word">Try your own word <input type="text" id="word" maxlength="14" placeholder="type here" autocomplete="off" spellcheck="false"></label>
     </section>
   </div>
@@ -129,8 +129,8 @@
   };
 
   const WORDS = { neutral: 'motion', hijinx: 'hijinx' };   // the word in the swirl, one per theme
-  const TURNS = [4, 3, 3, 2, 2, 1, 1];           // one entry per ring, center first: full turns each ring makes per loop
-  const LOOP = 80;                               // seconds before the motion repeats exactly
+  const TURNS = [3, 2, 2, 2, 1, 1, 1];           // one entry per ring, center first: full turns each ring makes per loop
+  const LOOP = 120;                              // seconds before the motion repeats exactly
   const REST = .3;                               // the still frame shown when motion is turned off
   const PHASES = [[0, 'Tight'], [.1, 'Loosening'], [.9, 'Loose']];
   const RIM = .1, POOL = .66;                   // how much field makes outline, and how much makes fill. lower = fatter
@@ -161,17 +161,23 @@
     const words = [];
     let n = 0;
     TURNS.forEach((turns, j) => {
-      const r = ringGap * (1.6 + j), count = Math.max(3, Math.floor(Math.PI * r * (1 + wide) / (tw + fs * 1.6)));
+      const r = ringGap * (1.6 + j), count = Math.max(3, Math.floor(Math.PI * room * (1.6 + j) * (1 + wide) / (tw + fs * 1.6)));
       for (let i = 0; i < count; i++, n++) {
-        if (j > 0 && chance(n) < .2) continue;          // leave some gaps, so the shape is lumpy and has holes
-        const a = i / count * Math.PI * 2 + j * .7 - T * turns - p * 5 / (1 + j * .5);   // counterclockwise, center fastest
-        const rr = r * (1 + .045 * Math.sin(a * 2 + j + T * 4) + .025 * Math.sin(a * 3 - T * 6));   // rings wobble in and out
+        if (j > 0 && chance(n) < .12) continue;         // leave some gaps, so the shape has holes
+        const a = i / count * Math.PI * 2 + j * .7 - T * turns - p * 3 / (1 + j * .5);   // counterclockwise, center fastest
+        // the swirl is not a neat circle. it has more layers in some directions than others, like the teeth
+        // of a gear, and the whole lumpy outline turns slowly. "here" is how present this word is (0..1):
+        // words grow in and shrink out as they pass a tooth, so nothing ever pops.
+        const layers = 4.7 + 2.1 * Math.sin(5 * (a + T) + 1) + .9 * Math.sin(2 * (a + T));
+        let here = clamp((layers - j) * 1.5 + .5); here = here * here * (3 - 2 * here);
+        if (!here) continue;
+        const rr = r * (1 + .08 * Math.sin(3 * (a + T)) + .035 * Math.sin(5 * a - 2 * T + j));   // rings bulge in and out
         const x = W / 2 + rr * Math.cos(a) * wide, y = H / 2 + rr * Math.sin(a);
         // the pointer pushes nearby words away. they ease out and ease back, like something floating
         const dx = x - ptr.x, dy = y - ptr.y, d = Math.hypot(dx, dy) || 1, reach = ringGap * 3.2;
         const f = ptr.on && !reduce ? Math.max(0, 1 - d / reach) * reach * .55 : 0;
         push[n * 2] += (dx / d * f - push[n * 2]) * .1; push[n * 2 + 1] += (dy / d * f - push[n * 2 + 1]) * .1;
-        words.push([x + push[n * 2], y + push[n * 2 + 1], Math.atan2(Math.cos(a), -Math.sin(a) * wide)]);
+        words.push([x + push[n * 2], y + push[n * 2 + 1], Math.atan2(Math.cos(a), -Math.sin(a) * wide), here]);
       }
     });
 
@@ -180,7 +186,7 @@
     // the shapes reach for each other and merge.
     field.fill(0);
     const half = (tw / 2 - fs * .1) / PX, far = fs * 1.9 / PX;      // half the word's length, and how far its field reaches
-    for (const [wx, wy, rot] of words) {
+    for (const [wx, wy, rot, here] of words) {
       const cx = wx / PX, cy = wy / PX, c = Math.cos(rot), s = Math.sin(rot);
       const bx = Math.abs(c) * half + far, by = Math.abs(s) * half + far;   // only visit the pixels near this word
       for (let y = Math.max(0, Math.floor(cy - by)); y <= Math.min(LH - 1, cy + by); y++)
@@ -188,7 +194,7 @@
           const dx = x - cx, dy = y - cy, along = dx * c + dy * s, across = dy * c - dx * s;
           const past = along - clamp(along, -half, half);            // distance beyond the end of the word, if any
           let k = 1 - (past * past + across * across) / (far * far);
-          if (k > 0) { k *= k; field[y * LW + x] += k * k; }
+          if (k > 0) { k *= k; field[y * LW + x] += k * k * Math.min(1, here * 1.5); }
         }
     }
     // a little field is the outline color, a lot is the fill color, none is clear
@@ -203,7 +209,11 @@
 
     ctx.clearRect(0, 0, W, H);                          // the words are never blurred, so they stay sharp and separate
     ctx.fillStyle = C.ink; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    for (const [x, y, rot] of words) { ctx.save(); ctx.translate(x, y); ctx.rotate(rot); ctx.fillText(word(), 0, fs * .04); ctx.restore(); }
+    for (const [x, y, rot, here] of words) {
+      const grow = clamp((here - .4) / .6);                // a word only shows once its shape is big enough to hold it
+      if (!grow) continue;
+      ctx.save(); ctx.translate(x, y); ctx.rotate(rot); ctx.scale(grow, grow); ctx.fillText(word(), 0, fs * .04); ctx.restore();
+    }
   }
 
 
