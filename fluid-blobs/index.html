@@ -120,7 +120,7 @@
   const size = () => { const d = Math.min(devicePixelRatio || 1, 2);
     W = stage.clientWidth; H = stage.clientHeight;
     flat.canvas.width = W * d; flat.canvas.height = H * d; flat.setTransform(d, 0, 0, d, 0, 0);
-    PX = W > 1400 ? 3 : 2;                        // screen pixels per melted pixel: raise it if this runs slowly
+    PX = 2;                                       // screen pixels per melted pixel: raise it if this runs slowly
     LW = Math.ceil(W / PX); LH = Math.ceil(H / PX); canvas.width = LW; canvas.height = LH;
     img = ctx.createImageData(LW, LH); px32 = new Uint32Array(img.data.buffer);
     [sum, red, green, blue] = [0, 0, 0, 0].map(() => new Float32Array(LW * LH));
@@ -161,6 +161,7 @@
 
     // layer one: plain circles, fading out as the melt begins
     flat.canvas.style.opacity = 1 - seg(melt, 0, .35);
+    canvas.style.opacity = seg(melt, 0, .05);           // and the melted layer stays hidden until there is some melt to show
     flat.clearRect(0, 0, W, H);
     for (const [x, y, r, color] of circles) { flat.fillStyle = color; flat.beginPath(); flat.arc(x, y, r, 0, 7); flat.fill(); }
 
@@ -182,7 +183,12 @@
     const edge = Math.pow(1 - 1 / (reach * reach), 2);
     for (let i = 0; i < sum.length; i++) {
       const v = sum[i];
-      px32[i] = v < edge ? 0 : ((clamp((v - edge) / (edge * .04 + .006)) * 255 << 24) | (blue[i] / v << 16) | (green[i] / v << 8) | (red[i] / v)) >>> 0;
+      if (v <= 0) { px32[i] = 0; continue; }
+      // how fast the spread changes at this pixel. dividing by it makes the edge exactly one pixel soft,
+      // which is what keeps the outlines smooth instead of stair-stepped.
+      const slope = Math.hypot(sum[i + 1] - sum[i - 1], sum[i + LW] - sum[i - LW]) / 2 + 1e-4;
+      const a = clamp(.5 + (v - edge) / slope);
+      px32[i] = a > 0 ? ((a * 255 << 24) | (blue[i] / v << 16) | (green[i] / v << 8) | (red[i] / v)) >>> 0 : 0;
     }
     ctx.putImageData(img, 0, 0);
   }
@@ -191,7 +197,8 @@
   function frame(now) {
     const r = section.getBoundingClientRect();
     if (reduce || (r.bottom > 0 && r.top < innerHeight)) {               // only redraw while the study is on screen
-      const p = reduce ? REST : clamp(-r.top / (r.height - innerHeight));
+      const span = r.height - innerHeight;                               // how much scrolling the study takes
+      const p = reduce ? REST : span > 0 ? clamp(-r.top / span) : 0;
       draw(p, reduce ? 0 : now / 1000);                                  // p = scroll progress, second value = seconds
       bar.style.width = (p * 100) + '%';
       phase.textContent = PHASES.filter(s => p >= s[0]).pop()[1];

@@ -16,7 +16,7 @@ Each study in this repo is one self-contained HTML file: a sticky stage inside a
 | Fluid blobs | `fluid-blobs/index.html` | Drifting circles melt together into thick blobs with blended colors; the pointer is a circle too |
 | Ribbon twist | `ribbon-twist/index.html` | A ribbon of color bands glides down the page, then turns over |
 
-The two card studies move DOM elements with CSS transforms and only change when the page scrolls. The other four draw on a `<canvas>` every frame: `draw(p, t)` takes scroll progress `p` (0 to 1) and the time `t` in seconds, so they keep drifting between scrolls.
+The two card studies move DOM elements with CSS transforms and only change when the page scrolls. The other four draw on a `<canvas>` every frame: `draw(p, t)` takes scroll progress `p` (0 to 1) and the time `t` in seconds, so they keep drifting between scrolls. Type cascade ignores `p`: its section is one screen tall, and it only plays and reacts to the pointer.
 
 ## Adding a study to a project
 
