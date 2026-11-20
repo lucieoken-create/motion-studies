@@ -1,12 +1,14 @@
 # motion-studies
 
-Small scroll animations for marketing pages. Each study is one HTML file with no libraries and no build step. Open it in a browser, change a few variables, and drop it into your own site. Studies 03 to 06 also move on their own, so they work as hero backgrounds. Type cascade (04) leaves scroll out and responds to the pointer only.
+Small motion pieces for websites and digital pages. Some are driven by scroll, some by the pointer, and some by both. Each study is one HTML file with no libraries and no build step. Open it in a browser, change a few variables, and drop it into your own site.
 
 **See them live:** [lucieoken-create.github.io/motion-studies](https://lucieoken-create.github.io/motion-studies/)
 
 ## The studies
 
 ### 01 · Card unfold
+
+`Scroll`
 
 A card folded in three opens on its hinges as you scroll, then grows until it fills the screen.
 
@@ -18,6 +20,8 @@ A card folded in three opens on its hinges as you scroll, then grows until it fi
 
 ### 02 · Card flip
 
+`Scroll`
+
 A wide photo splits into four strips. Each strip flips over, one after another, and lands as a playing card with its back showing. Then the cards fan out into a hand. You can try it with your own photo right on the page.
 
 | Neutral | hijinx theme (default) |
@@ -27,6 +31,8 @@ A wide photo splits into four strips. Each strip flips over, one after another, 
 [Open it live](https://lucieoken-create.github.io/motion-studies/card-flip/) · [Code](card-flip/index.html)
 
 ### 03 · Stripe swell
+
+`Scroll`
 
 Bulges drift slowly down a column of stripes, mirrored exactly left and right. Scrolling makes them swell, then widens the column until the stripes are the whole page.
 
@@ -38,6 +44,8 @@ Bulges drift slowly down a column of stripes, mirrored exactly left and right. S
 
 ### 04 · Type cascade
 
+`Pointer`
+
 One word, repeated, turns slowly like oil on water: quicker in the middle, slower at the rim. The swirl is lumpy, with more layers in some directions than others, like the teeth of a gear. The shapes around the words melt together and pull apart, while the words stay sharp. Move your pointer through it and the words get out of the way. This one does not use scroll: it is one screen tall and just plays. You can type your own word right on the page.
 
 | Neutral | hijinx theme (default) |
@@ -48,6 +56,8 @@ One word, repeated, turns slowly like oil on water: quicker in the middle, slowe
 
 ### 05 · Fluid blobs
 
+`Scroll` `Pointer`
+
 It starts as plain circles of color drifting past each other. Scrolling melts them: neighbors pool into thick blobs, and their colors bleed where they meet. Your pointer is a circle too.
 
 | Neutral | hijinx theme (default) |
@@ -57,6 +67,8 @@ It starts as plain circles of color drifting past each other. Scrolling melts th
 [Open it live](https://lucieoken-create.github.io/motion-studies/fluid-blobs/) · [Code](fluid-blobs/index.html)
 
 ### 06 · Ribbon twist
+
+`Scroll`
 
 One ribbon of color glides down the page in slow curves. Scrolling deepens the curves, then turns the ribbon over so you see its other side.
 

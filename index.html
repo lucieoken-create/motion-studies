@@ -6,14 +6,14 @@
 <title>motion-studies</title>
 <style>
   :root, [data-theme="neutral"] {
-    --bg: #F4F4F1; --ink: #18181B; --surface: #E2E2DD; --muted: #5F5F66; --dark: #111113;
+    --bg: #F4F4F1; --ink: #18181B; --surface: #E2E2DD; --accent: #CFCFC8; --muted: #5F5F66; --dark: #111113;
     --border: rgba(24,24,27,.14); --border-strong: rgba(24,24,27,.3);
     --font-display: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
     --font-body: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
     --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   }
   [data-theme="hijinx"] {
-    --bg: #F7F8F6; --ink: #52489C; --surface: #D4DCEF; --muted: #625C94; --dark: #242038;
+    --bg: #F7F8F6; --ink: #52489C; --surface: #D4DCEF; --accent: #E5E460; --muted: #625C94; --dark: #242038;
     --border: rgba(82,72,156,.18); --border-strong: rgba(82,72,156,.35);
     --font-display: "Bricolage Grotesque", system-ui, sans-serif;
     --font-body: "IBM Plex Sans", system-ui, sans-serif;
@@ -33,7 +33,11 @@
   .study:nth-child(even) { padding-left: 32px; border-left: 1px solid var(--border); }
   .study:nth-child(n+3) { border-top: 1px solid var(--border); }
   .study img { width: 100%; aspect-ratio: 16 / 10; object-fit: cover; background: var(--surface); display: block; }
-  .study h2 { font: 500 28px/1.1 var(--font-display); letter-spacing: -.02em; margin: 8px 0 0; }
+  .study .head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin: 8px 0 0; }
+  .study h2 { font: 500 28px/1.1 var(--font-display); letter-spacing: -.02em; margin: 0 4px 0 0; }
+  /* square tags that say what drives the motion */
+  .tag { font: 400 10px/1 var(--font-mono); letter-spacing: .14em; text-transform: uppercase; color: var(--ink); border: 1px solid var(--border-strong); padding: 5px 7px; white-space: nowrap; }
+  .tag.pointer { background: var(--accent); border-color: var(--accent); }
   .study p { font-size: 17px; line-height: 1.6; margin: 0; }
   .go { font: 400 12px/1 var(--font-mono); letter-spacing: .1em; text-transform: uppercase; }
   .go span { display: inline-block; transition: transform .16s; }
@@ -54,50 +58,50 @@
       <button class="theme-btn" id="themeBtn">Theme: hijinx</button>
     </header>
     <section class="intro">
-      <span class="label">Scroll-driven motion, one file each</span>
+      <span class="label">Scroll and pointer motion, one file each</span>
       <h1>Motion studies</h1>
-      <p class="lead">Small scroll animations for marketing pages. Each one is a single HTML file with no libraries, so you can open it, change a few variables and drop it into your own build. The newer four also move on their own, so they work as hero backgrounds, and type cascade skips scroll altogether.</p>
+      <p class="lead">Small motion pieces for websites and digital pages. Some are driven by scroll, some by the pointer, and some by both. Each one is a single HTML file with no libraries, so you can open it, change a few variables and drop it into your own build.</p>
     </section>
     <section class="grid">
       <a class="study" href="card-unfold/">
         <img src="previews/card-unfold-hijinx.gif" data-preview="card-unfold" alt="A card folded in three opens flap by flap, then grows to fill the screen">
         <span class="label">01</span>
-        <h2>Card unfold</h2>
+        <div class="head"><h2>Card unfold</h2><span class="tag">Scroll</span></div>
         <p>A card folded in three opens on its hinges as you scroll, then grows until it's the page.</p>
         <span class="go">Open the study <span>→</span></span>
       </a>
       <a class="study" href="card-flip/">
         <img src="previews/card-flip-hijinx.gif" data-preview="card-flip" alt="A wide photo splits into four strips that flip into playing cards">
         <span class="label">02</span>
-        <h2>Card flip</h2>
+        <div class="head"><h2>Card flip</h2><span class="tag">Scroll</span></div>
         <p>A wide photo splits into four strips that flip over one by one and land as playing cards.</p>
         <span class="go">Open the study <span>→</span></span>
       </a>
       <a class="study" href="stripe-swell/">
         <img src="previews/stripe-swell-hijinx.gif" data-preview="stripe-swell" alt="A column of stripes swells and pinches, then widens to fill the screen">
         <span class="label">03</span>
-        <h2>Stripe swell</h2>
+        <div class="head"><h2>Stripe swell</h2><span class="tag">Scroll</span></div>
         <p>Bulges drift down a column of mirrored stripes. Scrolling swells them, then widens the column until the stripes are the page.</p>
         <span class="go">Open the study <span>→</span></span>
       </a>
       <a class="study" href="type-cascade/">
         <img src="previews/type-cascade-hijinx.gif" data-preview="type-cascade" alt="A repeated word circles in a swirl of merging liquid shapes">
         <span class="label">04</span>
-        <h2>Type cascade</h2>
-        <p>One word, repeated, turns slowly in a lumpy swirl, and the shapes around the words melt together. No scrolling: it just plays, and your pointer pushes the words away.</p>
+        <div class="head"><h2>Type cascade</h2><span class="tag pointer">Pointer</span></div>
+        <p>One word, repeated, turns slowly in a lumpy swirl, and the shapes around the words melt together. It just plays, and your pointer pushes the words away.</p>
         <span class="go">Open the study <span>→</span></span>
       </a>
       <a class="study" href="fluid-blobs/">
         <img src="previews/fluid-blobs-hijinx.gif" data-preview="fluid-blobs" alt="Drifting circles of color melt together into thick blobs">
         <span class="label">05</span>
-        <h2>Fluid blobs</h2>
+        <div class="head"><h2>Fluid blobs</h2><span class="tag">Scroll</span><span class="tag pointer">Pointer</span></div>
         <p>Plain circles drift past each other. Scrolling melts them into thick blobs whose colors bleed together. Your pointer is a circle too.</p>
         <span class="go">Open the study <span>→</span></span>
       </a>
       <a class="study" href="ribbon-twist/">
         <img src="previews/ribbon-twist-hijinx.gif" data-preview="ribbon-twist" alt="A ribbon of color bands glides down the page and turns over">
         <span class="label">06</span>
-        <h2>Ribbon twist</h2>
+        <div class="head"><h2>Ribbon twist</h2><span class="tag">Scroll</span></div>
         <p>One ribbon of color glides down the page in slow curves. Scrolling deepens the curves, then turns it over.</p>
         <span class="go">Open the study <span>→</span></span>
       </a>
