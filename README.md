@@ -1,6 +1,6 @@
 # motion-studies
 
-Small scroll animations for marketing pages. Each study is one HTML file with no libraries and no build step. Open it in a browser, change a few variables, and drop it into your own site.
+Small scroll animations for marketing pages. Each study is one HTML file with no libraries and no build step. Open it in a browser, change a few variables, and drop it into your own site. Studies 03 to 06 also drift on their own between scrolls, so they work as hero backgrounds.
 
 **See them live:** [lucieoken-create.github.io/motion-studies](https://lucieoken-create.github.io/motion-studies/)
 
@@ -26,6 +26,46 @@ A wide photo splits into four strips. Each strip flips over, one after another, 
 
 [Open it live](https://lucieoken-create.github.io/motion-studies/card-flip/) · [Code](card-flip/index.html)
 
+### 03 · Stripe swell
+
+Bulges drift slowly down a column of stripes, mirrored exactly left and right. Scrolling makes them swell, then widens the column until the stripes are the whole page.
+
+| Neutral (default) | hijinx theme |
+| --- | --- |
+| ![Stripe swell, neutral theme](previews/stripe-swell-neutral.gif) | ![Stripe swell, hijinx theme](previews/stripe-swell-hijinx.gif) |
+
+[Open it live](https://lucieoken-create.github.io/motion-studies/stripe-swell/) · [Code](stripe-swell/index.html)
+
+### 04 · Type cascade
+
+One word, repeated, turns slowly like oil on water: quicker in the middle, slower at the rim. The swirl is lumpy, with more layers in some directions than others, like the teeth of a gear. The shapes around the words melt together and pull apart, while the words stay sharp. Your pointer pushes them away, and scrolling loosens the swirl. You can type your own word right on the page.
+
+| Neutral (default) | hijinx theme |
+| --- | --- |
+| ![Type cascade, neutral theme](previews/type-cascade-neutral.gif) | ![Type cascade, hijinx theme](previews/type-cascade-hijinx.gif) |
+
+[Open it live](https://lucieoken-create.github.io/motion-studies/type-cascade/) · [Code](type-cascade/index.html)
+
+### 05 · Fluid blobs
+
+It starts as plain circles of color drifting past each other. Scrolling melts them: neighbors pool into thick blobs, and their colors bleed where they meet. Your pointer is a circle too.
+
+| Neutral (default) | hijinx theme |
+| --- | --- |
+| ![Fluid blobs, neutral theme](previews/fluid-blobs-neutral.gif) | ![Fluid blobs, hijinx theme](previews/fluid-blobs-hijinx.gif) |
+
+[Open it live](https://lucieoken-create.github.io/motion-studies/fluid-blobs/) · [Code](fluid-blobs/index.html)
+
+### 06 · Ribbon twist
+
+One ribbon of color glides down the page in slow curves. Scrolling deepens the curves, then turns the ribbon over so you see its other side.
+
+| Neutral (default) | hijinx theme |
+| --- | --- |
+| ![Ribbon twist, neutral theme](previews/ribbon-twist-neutral.gif) | ![Ribbon twist, hijinx theme](previews/ribbon-twist-hijinx.gif) |
+
+[Open it live](https://lucieoken-create.github.io/motion-studies/ribbon-twist/) · [Code](ribbon-twist/index.html)
+
 ## Use one in your project
 
 1. Copy the study's `index.html` (and any image it points to in `assets/`).
@@ -33,7 +73,9 @@ A wide photo splits into four strips. Each strip flips over, one after another, 
 3. Swap the content. The unfold's card face lives in the `<template>` near the bottom of the page; the flip's picture is the `PHOTOS` list at the top of its script, one per theme.
 4. Retime it. Each script has a short "timing" block where every step is a slice of scroll progress from 0 to 1. The section's `height` (420vh) sets how much scrolling the whole thing takes.
 
-Both studies respect reduced motion: people who've turned animation off in their settings see the finished state, still.
+Studies 03 to 06 are drawn on a canvas, so there's no markup to swap. Their content is a few constants at the top of the script: the number of stripes or bands, the word in the swirl (`WORDS`, one per theme), how many circles there are, and `LOOP`, the number of seconds before the motion repeats exactly. Their colors still come from the same theme variables.
+
+Every study respects reduced motion: people who've turned animation off in their settings see the finished state, still.
 
 ## Themes
 
@@ -45,8 +87,12 @@ Every study ships with two themes. **Neutral** is the default. **hijinx** is the
 
 ## How they work
 
-Both studies draw an image once and slice it into pieces, then move the pieces with 3D CSS transforms. When the pieces sit flat, the seams disappear and it reads as one picture. Scroll position drives everything, so scrolling back up plays it in reverse. Depth comes from flat shades and hard offset shadows, not gradients or blur.
+The two card studies draw an image once and slice it into pieces, then move the pieces with 3D CSS transforms. When the pieces sit flat, the seams disappear and it reads as one picture. Scroll position drives everything, so scrolling back up plays it in reverse. Depth comes from flat shades and hard offset shadows, not gradients or blur.
+
+The four canvas studies redraw every frame from two numbers: scroll progress (0 to 1) and the time in seconds. Scroll decides the big change and time adds the drift, so each one is still alive when you stop scrolling. Stripe swell and ribbon twist fill shapes between curves. Type cascade and fluid blobs are drawn pixel by pixel on a small canvas that is stretched to fit: every word or circle spreads into the pixels around it, the way a blur would, and then each pixel is made either solid or clear. Where two spreads overlap they add up, which is why shapes reach for each other and merge. Those two also react to the pointer.
 
 ## Credits
+
+Studies 03 to 06 started from pieces on [brik.space](https://brik.space) and were rebuilt from scratch with different motion, color and code: [Le Parc - Visual Blueprint](https://brik.space/tools/remix-of-visual-blueprint-studio-mpzo7ppa) and [Liquid Rainbow Topography Hero](https://brik.space/tools/liquid-topography-hero-remix-remix-mpzo70fv) by Maya Netzer, [type for fun 04](https://brik.space/tools/remix-of-remix-of-cascade-type-msfywfiu) by Clueless studio, and [BLB](https://brik.space/tools/thresholded-fluid-blo-mo8z7jxh) by Or Yogev.
 
 Made by [Lucie Oken](https://hijinx.studio) of hijinx. The marble bust and the ASCII disco ball in the hijinx theme are Lucie's own and are included under the same license. MIT licensed: use these anywhere, including client work, and keep the license notice.

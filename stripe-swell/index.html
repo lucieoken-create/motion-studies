@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="neutral">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Stripe swell · motion-studies</title>
+<style>
+  /* ---------- themes: change these variables to restyle the study ---------- */
+  :root, [data-theme="neutral"] {
+    --bg: #F4F4F1; --ink: #18181B; --surface: #E2E2DD; --accent: #CFCFC8; --accent-2: #E9E9E4;
+    --muted: #5F5F66; --dark: #111113; --border: rgba(24,24,27,.14); --border-strong: rgba(24,24,27,.3);
+    --font-display: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    --font-body: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  [data-theme="hijinx"] {
+    --bg: #F7F8F6; --ink: #52489C; --surface: #D4DCEF; --accent: #E5E460; --accent-2: #F8E49B;
+    --muted: #625C94; --dark: #242038; --border: rgba(82,72,156,.18); --border-strong: rgba(82,72,156,.35);
+    --font-display: "Bricolage Grotesque", system-ui, sans-serif;
+    --font-body: "IBM Plex Sans", system-ui, sans-serif;
+    --font-mono: "Space Mono", ui-monospace, monospace;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--font-body); -webkit-font-smoothing: antialiased; }
+  .wrap { max-width: 1200px; margin: 0 auto; padding: 0 32px; }
+  .label { font: 400 11px/1.4 var(--font-mono); letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+  .top { display: flex; justify-content: space-between; align-items: center; padding: 24px 0; border-bottom: 1px solid var(--border); }
+  .top a { color: var(--ink); text-decoration: none; }
+  .theme-btn { font: 400 11px/1 var(--font-mono); letter-spacing: .14em; text-transform: uppercase; color: var(--ink); background: none; border: 1px solid var(--border-strong); padding: 8px 12px; cursor: pointer; }
+  .theme-btn:hover { border-color: var(--ink); }
+
+  .intro { padding: 128px 0 96px; display: grid; gap: 24px; max-width: 760px; }
+  .eyebrow { font: 400 12px/1.4 var(--font-mono); letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+  h1 { font: 500 clamp(44px, 6vw, 80px)/1.02 var(--font-display); letter-spacing: -.025em; margin: 0; text-wrap: balance; }
+  .lead { font-size: 21px; line-height: 1.55; margin: 0; max-width: 58ch; }
+
+  /* ---------- the study ---------- */
+  .study { position: relative; height: 420vh; }             /* scroll length: taller = slower */
+  .stage { position: sticky; top: 0; height: 100vh; overflow: hidden; background: var(--accent); }
+  .stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+
+  .meter { position: absolute; right: 32px; bottom: 32px; display: flex; gap: 16px; align-items: center; background: var(--bg); padding: 8px 12px; border: 1px solid var(--border-strong); }
+  .meter .bar { width: 120px; height: 1px; background: var(--border-strong); position: relative; }
+  .meter .bar i { position: absolute; left: 0; top: -1px; height: 3px; background: var(--ink); width: 0; }
+
+  .foot { display: flex; justify-content: space-between; padding: 24px 0 48px; border-top: 1px solid var(--border); margin-top: 96px; }
+  .foot a { color: inherit; text-decoration: none; border-bottom: 1px solid var(--border-strong); }
+  @media (max-width: 760px) { .wrap { padding: 0 24px; } .meter { display: none; } }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="top">
+      <a class="label" href="../">← motion-studies</a>
+      <button class="theme-btn" id="themeBtn">Theme: neutral</button>
+    </header>
+    <section class="intro">
+      <span class="eyebrow">Motion study · stripe swell</span>
+      <h1>Stripes that breathe</h1>
+      <p class="lead">Bulges drift slowly down a column of stripes, mirrored exactly left and right. Scrolling makes them swell, then widens the column until the stripes are the whole page.</p>
+    </section>
+  </div>
+
+  <section class="study" id="study">
+    <div class="stage" id="stage">
+      <canvas id="canvas" aria-hidden="true"></canvas>
+      <div class="meter" aria-hidden="true"><span class="label" id="phase"></span><span class="bar"><i id="bar"></i></span></div>
+    </div>
+  </section>
+
+  <div class="wrap">
+    <footer class="foot">
+      <span class="label">Made by Lucie Oken · <a href="https://hijinx.studio">hijinx.studio</a></span>
+      <span class="label">MIT license</span>
+    </footer>
+  </div>
+
+<script>
+/* theme toggle: add #hijinx to the URL to open in the hijinx theme */
+(() => {
+  const root = document.documentElement, btn = document.getElementById('themeBtn');
+  const fonts = () => { if (document.getElementById('hjFonts')) return;
+    const l = document.createElement('link'); l.id = 'hjFonts'; l.rel = 'stylesheet';
+    l.href = 'https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500&family=IBM+Plex+Sans:wght@400;500&family=Space+Mono&display=swap';
+    document.head.appendChild(l); };
+  const set = t => { root.dataset.theme = t; btn.textContent = 'Theme: ' + t; if (t === 'hijinx') fonts();
+    document.dispatchEvent(new CustomEvent('themechange', { detail: t })); };
+  if (location.hash === '#hijinx') set('hijinx');
+  addEventListener('hashchange', () => set(location.hash === '#hijinx' ? 'hijinx' : 'neutral'));
+  btn.addEventListener('click', () => set(root.dataset.theme === 'hijinx' ? 'neutral' : 'hijinx'));
+})();
+
+/* the study */
+(() => {
+  const root = document.documentElement;
+  const section = document.getElementById('study'), stage = document.getElementById('stage');
+  const canvas = document.getElementById('canvas'), ctx = canvas.getContext('2d');
+  const bar = document.getElementById('bar'), phase = document.getElementById('phase');
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
+  const lerp = (a, b, k) => a + (b - a) * k;
+  const seg = (p, a, b) => clamp((p - a) / (b - a));                    // a slice of scroll progress, as 0..1
+  const ease = t => t < .5 ? 4*t*t*t : 1 - Math.pow(-2*t + 2, 3) / 2;     // ease in-out cubic
+  const rgb = hex => [1, 3, 5].map(i => parseInt(hex.slice(i, i + 2), 16));
+  const mix = (a, b, k) => { const A = rgb(a), B = rgb(b);                // blend two hex colors
+    return '#' + A.map((v, i) => Math.round(lerp(v, B[i], k)).toString(16).padStart(2, '0')).join(''); };
+
+  // colors and fonts are read from the theme variables, so a new theme restyles the drawing too
+  const C = {};
+  const readTheme = () => { const s = getComputedStyle(root);
+    for (const n of ['bg', 'ink', 'surface', 'accent', 'accent-2', 'dark', 'font-display']) C[n] = s.getPropertyValue('--' + n).trim(); };
+
+  let W, H;
+  const size = () => { const d = Math.min(devicePixelRatio || 1, 2);
+    W = stage.clientWidth; H = stage.clientHeight;
+    canvas.width = W * d; canvas.height = H * d; ctx.setTransform(d, 0, 0, d, 0, 0); };
+
+  const K = 40;                                  // number of stripes
+  const LOOP = 30;                               // seconds before the motion repeats exactly
+  const REST = .6;                               // the still frame shown when motion is turned off
+  const PHASES = [[0, 'Rippling'], [.06, 'Swelling'], [.74, 'Flooding'], [.98, 'Full']];
+  const STEP = 4;                                // one outline point every 4px down the page
+  let half = [];                                 // half the column's width at each of those points
+
+  // one filled shape between two positions across the column (-1 = left edge, 1 = right edge)
+  const band = (u0, u1, dx = 0) => {
+    ctx.beginPath();
+    for (let i = 0; i < half.length; i++) ctx.lineTo(W / 2 + dx + u0 * half[i], i * STEP - 8 + dx);
+    for (let i = half.length - 1; i >= 0; i--) ctx.lineTo(W / 2 + dx + u1 * half[i], i * STEP - 8 + dx);
+    ctx.fill();
+  };
+  const edge = k => Math.sin((k / K - .5) * Math.PI);   // stripes get thinner toward the sides, like a cylinder
+
+  function draw(p, t) {
+    const T = t / LOOP * Math.PI * 2;                   // whole-number multiples of T repeat cleanly
+    // timing: change these ranges to retime the study
+    const swell = .45 + .55 * ease(seg(p, .04, .6));    // bulges grow (some are always there, so it moves at rest)
+    const flood = ease(seg(p, .74, .98));               // the column widens to cover the stage
+    const wave = swell * (1 - flood);
+    const spacing = clamp(W * .155, 110, 220);          // distance from one bulge to the next
+    const slim = Math.min(W * .1, 150), reach = Math.min(W * .3, 400);   // the column at its narrowest, and how far a bulge adds to it
+
+    half = [];
+    for (let y = -8; y <= H + 8; y += STEP) {
+      const a = y / spacing * Math.PI - T - p * 7;      // slides down the column over time, and as you scroll
+      // each bulge narrows to a rounded tip, and the pinch between two bulges is a wide curve
+      const bulge = 1 - Math.sqrt(Math.sin(a) * Math.sin(a) * .88 + .12);
+      // a second, longer wave makes some bulges big and some small. the same width is used on both
+      // sides of the center line, so left and right are exact mirrors.
+      const w = slim + wave * reach * bulge / .65 * (.68 + .32 * Math.sin(y / spacing * 1.7 - T));
+      half.push(lerp(w, W * .82, flood));
+    }
+
+    ctx.fillStyle = C.accent; ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = C.dark; band(-1, 1, 14 * wave);     // hard offset shadow, no blur
+    ctx.fillStyle = C.ink; band(-1, 1);                 // the whole column in one color...
+    ctx.fillStyle = C.bg;                               // ...then every other stripe on top
+    for (let k = 1; k < K; k += 2) band(edge(k), edge(k + 1));
+  }
+
+
+  function frame(now) {
+    const r = section.getBoundingClientRect();
+    if (reduce || (r.bottom > 0 && r.top < innerHeight)) {               // only redraw while the study is on screen
+      const p = reduce ? REST : clamp(-r.top / (r.height - innerHeight));
+      draw(p, reduce ? 0 : now / 1000);                                  // p = scroll progress, second value = seconds
+      bar.style.width = (p * 100) + '%';
+      phase.textContent = PHASES.filter(s => p >= s[0]).pop()[1];
+    }
+    if (!reduce) requestAnimationFrame(frame);
+  }
+  const still = () => { if (reduce) frame(0); };                         // reduced motion: one finished frame, redrawn only when needed
+  readTheme(); size(); requestAnimationFrame(frame);
+  addEventListener('resize', () => { size(); still(); });
+  document.addEventListener('themechange', () => { readTheme(); still(); });
+  if (document.fonts) document.fonts.addEventListener('loadingdone', still);
+})();
+</script>
+</body>
+</html>
