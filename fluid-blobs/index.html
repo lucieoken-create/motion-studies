@@ -57,13 +57,14 @@
     </header>
     <section class="intro">
       <span class="eyebrow">Motion study · fluid blobs</span>
-      <h1>Drops that pool together</h1>
-      <p class="lead">Scattered drops drift on their own. Scrolling pulls them into one mass, then floods the screen with it. Your pointer is a drop too: bring it close and the others reach for it.</p>
+      <h1>A lamp warming up</h1>
+      <p class="lead">Thick blobs of color rise and sink like a lava lamp, stretching into each other and shedding droplets. Scrolling warms the lamp, so they leave the bottom and travel. Your pointer is a droplet too.</p>
     </section>
   </div>
 
   <section class="study" id="study">
     <div class="stage" id="stage">
+      <canvas id="back" aria-hidden="true"></canvas>
       <canvas id="canvas" aria-hidden="true"></canvas>
       <div class="meter" aria-hidden="true"><span class="label" id="phase"></span><span class="bar"><i id="bar"></i></span></div>
     </div>
@@ -112,71 +113,83 @@
   const readTheme = () => { const s = getComputedStyle(root);
     for (const n of ['bg', 'ink', 'surface', 'accent', 'accent-2', 'dark', 'font-display']) C[n] = s.getPropertyValue('--' + n).trim(); };
 
-  // this one is drawn pixel by pixel, so the canvas is kept small and stretched to fit
-  let W, H, PX, img, px32;
+  // drawn pixel by pixel, so both canvases are kept small and stretched to fit. the back one is
+  // tiny on purpose: stretching it that far is what makes the far layer look out of focus.
+  const back = document.getElementById('back').getContext('2d');
+  let W, H, PX, img, bimg;
   const size = () => {
     PX = stage.clientWidth > 1400 ? 3 : 2;       // screen pixels per drawn pixel: raise it if this runs slowly
     W = Math.ceil(stage.clientWidth / PX); H = Math.ceil(stage.clientHeight / PX);
-    canvas.width = W; canvas.height = H;
-    img = ctx.createImageData(W, H); px32 = new Uint32Array(img.data.buffer);
+    canvas.width = W; canvas.height = H; img = ctx.createImageData(W, H);
+    back.canvas.width = Math.ceil(W / 5); back.canvas.height = Math.ceil(H / 5);
+    bimg = back.createImageData(back.canvas.width, back.canvas.height);
   };
 
-  // the drops: where each one lives (-1..1 across the stage), its size, color and drift speed
-  const DROPS = [
-    { x: -.78, y: -.52, r: 1.1, c: 0, s: .50 }, { x: -.30, y: .58, r: .9, c: 1, s: .70 }, { x: .12, y: -.66, r: 1.0, c: 2, s: .40 },
-    { x: .66, y: -.30, r: 1.2, c: 3, s: .60 }, { x: .82, y: .56, r: .8, c: 0, s: .80 }, { x: -.60, y: .12, r: .7, c: 2, s: .90 },
-    { x: .30, y: .30, r: 1.0, c: 1, s: .55 }, { x: -.08, y: -.10, r: .8, c: 3, s: .65 }, { x: .46, y: .74, r: .6, c: 4, s: .75 },
+  // the blobs: where each one lives across the stage (0..1), its size, its color and how fast it rises and sinks
+  const BLOBS = [
+    { x: .13, r: 1.15, c: 0, s: 2 }, { x: .29, r: .85, c: 1, s: 3 }, { x: .45, r: 1.2, c: 2, s: 2 },
+    { x: .61, r: .9, c: 0, s: 3 }, { x: .77, r: 1.1, c: 1, s: 2 }, { x: .90, r: .75, c: 2, s: 4 },
   ];
-  const REST = .6;                               // the still frame shown when motion is turned off
-  const PHASES = [[0, 'Drops'], [.08, 'Gathering'], [.6, 'One'], [.74, 'Flooding']];
-  const RIM = 1.22;                              // how thick the outline is (1 = none)
+  const LOOP = 60;                               // seconds before the motion repeats exactly
+  const REST = .7;                               // the still frame shown when motion is turned off
+  const PHASES = [[0, 'Cold'], [.04, 'Warming'], [.7, 'Flowing']];
 
   const ptr = { x: 0, y: 0, on: false, k: 0 };
   stage.addEventListener('pointermove', e => { const r = stage.getBoundingClientRect();
     ptr.x = (e.clientX - r.left) / PX; ptr.y = (e.clientY - r.top) / PX; ptr.on = true; });
   stage.addEventListener('pointerleave', () => ptr.on = false);
 
-  function draw(p, t) {
-    // timing: change these ranges to retime the study
-    const gather = ease(seg(p, .08, .6));               // drops move in and grow
-    const flood = ease(seg(p, .72, 1));                 // the mass swells past the edges of the stage
-    const unit = Math.min(W, H), reach = lerp(1, .36, gather);
-    ptr.k += ((ptr.on && !reduce ? 1 : 0) - ptr.k) * .08;   // the pointer's drop fades in and out
-
-    const fill = [C.accent, C.surface, C['accent-2'], mix(C.ink, C.bg, .45), C.bg].map(rgb);
-    const rim = rgb(mix(C.ink, C.surface, .3)), n = DROPS.length + 1;
-    const bx = [], by = [], rr = [], col = [];
-    DROPS.forEach((d, i) => {
-      let x = W / 2 + (d.x * reach + .1 * Math.sin(t * d.s + i)) * W * .46;
-      let y = H / 2 + (d.y * reach + .1 * Math.cos(t * d.s * .8 + i * 2)) * H * .42;
-      x += (ptr.x - x) * .14 * ptr.k; y += (ptr.y - y) * .14 * ptr.k;      // lean toward the pointer
-      const r = d.r * unit * lerp(.085, .11, gather) * (1 + flood * 5);
-      bx.push(x); by.push(y); rr.push(r * r); col.push(fill[d.c]);
-    });
-    bx.push(ptr.x); by.push(ptr.y); rr.push(Math.pow(unit * .1 * ptr.k, 2)); col.push(fill[4]);
-
-    // every drop pushes on every pixel, more strongly up close. where the pushes add up past 1
-    // there is liquid, and the pixel takes the color of the drop pushing hardest.
-    for (let y = 0, i = 0; y < H; y++) for (let x = 0; x < W; x++, i++) {
-      let sum = 0, top = 0, next = 0, c = rim, c2 = rim;
-      for (let b = 0; b < n; b++) {
-        const dx = x - bx[b], dy = y - by[b], f = rr[b] / (dx * dx + dy * dy + 1);
-        sum += f;
-        if (f > top) { next = top; c2 = c; top = f; c = col[b]; } else if (f > next) { next = f; c2 = col[b]; }
+  // paint one layer of liquid. every blob pushes on every pixel, more strongly up close. where the
+  // pushes add up past "edge" there is liquid, colored by whichever blobs are pushing hardest, so
+  // two colors that meet blend into each other. "soft" is how gradually the edge fades out.
+  const paint = (g, image, blobs, edge, soft) => {
+    const w = image.width, h = image.height, px = new Uint32Array(image.data.buffer), n = blobs.length;
+    for (let y = 0, i = 0; y < h; y++) for (let x = 0; x < w; x++, i++) {
+      let sum = 0, weight = 0, r = 0, gr = 0, b = 0;
+      for (let k = 0; k < n; k++) {
+        const q = blobs[k], dx = x - q[0], dy = y - q[1], f = q[2] / (dx * dx + dy * dy + 1), ff = f * f;
+        sum += f; weight += ff; r += q[3] * ff; gr += q[4] * ff; b += q[5] * ff;
       }
-      if (sum < 1) { px32[i] = 0; continue; }           // no liquid here: leave the pixel clear
-      // three short blends keep the edges smooth: between two drops, into the outline, and out to nothing
-      const k = .5 + .5 * clamp((top - next) / (top * .05)), o = clamp((sum - RIM) / .04);
-      const r = lerp(rim[0], lerp(c2[0], c[0], k), o), g = lerp(rim[1], lerp(c2[1], c[1], k), o), bl = lerp(rim[2], lerp(c2[2], c[2], k), o);
-      px32[i] = ((clamp((sum - 1) / .05) * 255 << 24) | (bl << 16) | (g << 8) | r) >>> 0;
+      px[i] = sum < edge ? 0 : ((clamp((sum - edge) / soft) * 255 << 24) | (b / weight << 16) | (gr / weight << 8) | (r / weight)) >>> 0;
     }
-    ctx.putImageData(img, 0, 0);
+    g.putImageData(image, 0, 0);
+  };
+
+  function draw(p, t) {
+    const T = t / LOOP * Math.PI * 2;                   // whole-number multiples of T repeat cleanly
+    // timing: change this range to retime the study
+    const heat = ease(seg(p, .04, .7));                 // cold: pooled along the bottom. warm: traveling the whole height
+    const unit = Math.min(W, H);
+    ptr.k += ((ptr.on && !reduce ? 1 : 0) - ptr.k) * .08;   // the pointer's droplet fades in and out
+
+    const fill = [C.accent, C.surface, C['accent-2']].map(rgb);
+    const blobs = [];                                   // each: x, y, radius squared, red, green, blue
+    BLOBS.forEach((d, i) => {
+      const bob = Math.sin(T * d.s + i * 2.4);          // -1..1: this blob's slow rise and fall
+      let x = (d.x + .09 * Math.sin(T * (d.s - 1) + i * 1.7)) * W;
+      let y = lerp(.82 + .07 * bob, .5 + .4 * bob, heat) * H;
+      x += (ptr.x - x) * .12 * ptr.k; y += (ptr.y - y) * .12 * ptr.k;      // lean toward the pointer
+      const r = d.r * unit * lerp(.125, .145, heat), c = fill[d.c];
+      blobs.push([x, y, r * r, ...c]);
+      // a droplet: it drifts out of its blob on a stretching neck, snaps off, and later falls back in
+      const out = Math.max(0, Math.sin(T * (d.s + 2) + i * 4.1)) * lerp(1.3, 2.3, heat) * r, a = i * 2.1 + T;
+      blobs.push([x + Math.cos(a) * out, y + Math.sin(a) * out, r * r * .1, ...c]);
+    });
+    blobs.push([ptr.x, ptr.y, Math.pow(unit * .075 * ptr.k, 2), ...rgb(C.bg)]);
+    paint(ctx, img, blobs, 1, .06);
+
+    // the far layer: a few big slow blobs in one dim color, with a very soft edge
+    const bw = bimg.width, bh = bimg.height, dim = rgb(mix(C.dark, mix(C.ink, C.surface, .4), .34)), far = [];
+    for (let k = 0; k < 4; k++) far.push([
+      bw * (.14 + .24 * k + .07 * Math.sin(T * 2 + k * 2)), bh * (.5 + .36 * Math.sin(T * (1 + k % 2) + k * 1.9)),
+      Math.pow(Math.min(bw, bh) * (.15 + .03 * (k % 2)), 2), ...dim]);
+    paint(back, bimg, far, .9, .5);
   }
 
 
   function frame(now) {
     const r = section.getBoundingClientRect();
-    if (r.bottom > 0 && r.top < innerHeight) {                           // only draw while the study is on screen
+    if (reduce || (r.bottom > 0 && r.top < innerHeight)) {               // only redraw while the study is on screen
       const p = reduce ? REST : clamp(-r.top / (r.height - innerHeight));
       draw(p, reduce ? 0 : now / 1000);                                  // p = scroll progress, second value = seconds
       bar.style.width = (p * 100) + '%';

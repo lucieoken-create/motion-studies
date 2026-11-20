@@ -40,7 +40,7 @@
 
   /* ---------- the study ---------- */
   .study { position: relative; height: 420vh; }             /* scroll length: taller = slower */
-  .stage { position: sticky; top: 0; height: 100vh; overflow: hidden; background: var(--bg); }
+  .stage { position: sticky; top: 0; height: 100vh; overflow: hidden; background: var(--surface); }
   .stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 
   .meter { position: absolute; right: 32px; bottom: 32px; display: flex; gap: 16px; align-items: center; background: var(--bg); padding: 8px 12px; border: 1px solid var(--border-strong); }
@@ -60,14 +60,15 @@
     </header>
     <section class="intro">
       <span class="eyebrow">Motion study · type cascade</span>
-      <h1>One word, dealt into a stack</h1>
-      <p class="lead">A single word multiplies into a stack, and a wave runs down it row by row. Move your pointer across it and the stack follows like a spine.</p>
+      <h1>A word caught in a swirl</h1>
+      <p class="lead">One word, repeated, circles like oil on water: quick in the middle, slow at the rim. The shapes around the words melt together and pull apart. Your pointer pushes them away, and scrolling loosens the swirl.</p>
       <label class="word">Try your own word <input type="text" id="word" maxlength="14" placeholder="type here" autocomplete="off" spellcheck="false"></label>
     </section>
   </div>
 
   <section class="study" id="study">
     <div class="stage" id="stage">
+      <canvas id="liquid" aria-hidden="true"></canvas>
       <canvas id="canvas" aria-hidden="true"></canvas>
       <div class="meter" aria-hidden="true"><span class="label" id="phase"></span><span class="bar"><i id="bar"></i></span></div>
     </div>
@@ -116,84 +117,99 @@
   const readTheme = () => { const s = getComputedStyle(root);
     for (const n of ['bg', 'ink', 'surface', 'accent', 'accent-2', 'dark', 'font-display']) C[n] = s.getPropertyValue('--' + n).trim(); };
 
-  let W, H;
+  // two layers: the liquid, drawn pixel by pixel on a small canvas that is stretched to fit, and the words on top
+  const liquid = document.getElementById('liquid').getContext('2d');
+  const PX = 2;                                  // screen pixels per liquid pixel: raise it if this runs slowly
+  let W, H, LW, LH, img, px32, field;
   const size = () => { const d = Math.min(devicePixelRatio || 1, 2);
     W = stage.clientWidth; H = stage.clientHeight;
-    canvas.width = W * d; canvas.height = H * d; ctx.setTransform(d, 0, 0, d, 0, 0); };
+    canvas.width = W * d; canvas.height = H * d; ctx.setTransform(d, 0, 0, d, 0, 0);
+    LW = Math.ceil(W / PX); LH = Math.ceil(H / PX); liquid.canvas.width = LW; liquid.canvas.height = LH;
+    img = liquid.createImageData(LW, LH); px32 = new Uint32Array(img.data.buffer); field = new Float32Array(LW * LH);
+  };
 
-  const WORDS = { neutral: 'motion', hijinx: 'hijinx' };   // the word in the stack, one per theme
-  const R = 11;                                  // rows in the stack
-  const REST = .8;                               // the still frame shown when motion is turned off
-  const PHASES = [[0, 'One'], [.05, 'Stacking'], [.4, 'Waving'], [.78, 'Cascade']];
+  const WORDS = { neutral: 'motion', hijinx: 'hijinx' };   // the word in the swirl, one per theme
+  const TURNS = [4, 3, 3, 2, 2, 1, 1];           // one entry per ring, center first: full turns each ring makes per loop
+  const LOOP = 80;                               // seconds before the motion repeats exactly
+  const REST = .3;                               // the still frame shown when motion is turned off
+  const PHASES = [[0, 'Tight'], [.1, 'Loosening'], [.9, 'Loose']];
+  const RIM = .1, POOL = .66;                   // how much field makes outline, and how much makes fill. lower = fatter
 
   let userWord = '';                             // set by "Try your own word"
   const word = () => userWord || WORDS[root.dataset.theme] || WORDS.neutral;
   document.getElementById('word').addEventListener('input', e => { userWord = e.target.value.trim(); still(); });
 
-  // the pointer drags the nearest row, and the rows above and below follow a beat behind
   const ptr = { x: 0, y: 0, on: false };
-  const drag = new Float32Array(R);
+  const push = new Float32Array(2000);           // how far the pointer has pushed each word (x, y pairs)
   stage.addEventListener('pointermove', e => { const r = stage.getBoundingClientRect();
     ptr.x = e.clientX - r.left; ptr.y = e.clientY - r.top; ptr.on = true; });
   stage.addEventListener('pointerleave', () => ptr.on = false);
+  const chance = n => { const v = Math.sin(n * 12.9898) * 43758.5453; return v - Math.floor(v); };   // a fixed "random" 0..1 per word
 
   function draw(p, t) {
-    // timing: change these ranges to retime the study
-    const spread = ease(seg(p, .04, .4));               // one word fans out into a stack
-    const wave = .06 + .94 * ease(seg(p, .3, .78));     // the side-to-side wave grows
+    const T = t / LOOP * Math.PI * 2;                   // whole-number multiples of T repeat cleanly
+    // timing: change this range to retime the study
+    const loose = ease(seg(p, .1, .9));                 // the rings drift apart, so less of the liquid touches
 
-    // size the word so the stack fits the stage
-    ctx.font = `500 100px ${C['font-display']}`;
-    const per100 = ctx.measureText(word()).width || 1;
-    const fs = Math.min(H * .074, W * .46 / per100 * 100);
-    const tw = per100 * fs / 100, gap = fs * .95 * spread;
-    const amp = W * .1 * wave * (.15 + .85 * spread);
-
-    if (ptr.on && !reduce) {
-      const lead = clamp(Math.round((ptr.y - H / 2) / (gap || 1) + (R - 1) / 2), 0, R - 1);
-      drag[lead] += (clamp(ptr.x - W / 2, -W * .3, W * .3) - drag[lead]) * .2;
-      for (let i = lead + 1; i < R; i++) drag[i] += (drag[i - 1] - drag[i]) * .3;
-      for (let i = lead - 1; i >= 0; i--) drag[i] += (drag[i + 1] - drag[i]) * .3;
-    } else for (let i = 0; i < R; i++) drag[i] *= .92;  // let go: ease back to center
-
-    // where each row sits. each one is a little later in the wave than the row above: that's the cascade
-    const x = [], y = [], tilt = [];
-    for (let i = 0; i < R; i++) {
-      x.push(W / 2 + amp * Math.sin(t * 1.5 - i * .4) + drag[i]);
-      y.push(H / 2 + (i - (R - 1) / 2) * gap);
-    }
-    for (let i = 0; i < R; i++) {                        // lean each word with the curve of the stack
-      const a = Math.max(i - 1, 0), b = Math.min(i + 1, R - 1);
-      tilt.push(-Math.atan2(x[b] - x[a], Math.max((b - a) * gap, fs)) * .5);
-    }
-
-    // every row is drawn as a fat round-ended line. painting all the outlines first and all the fills
-    // second makes neighbors melt into one outlined shape.
-    const pill = (i, width, color, d = 0) => {
-      ctx.save(); ctx.translate(x[i] + d, y[i] + d); ctx.rotate(tilt[i]);
-      ctx.strokeStyle = color; ctx.lineWidth = width; ctx.lineCap = 'round';
-      ctx.beginPath(); ctx.moveTo(-tw / 2 + fs * .2, 0); ctx.lineTo(tw / 2 - fs * .2, 0); ctx.stroke();
-      ctx.restore();
-    };
-    const h = fs * 1.2, line = Math.max(3, fs * .09);
-    ctx.fillStyle = C.bg; ctx.fillRect(0, 0, W, H);
-    for (let i = 0; i < R; i++) pill(i, h + line * 2, C.dark, fs * .16);   // hard offset shadow, no blur
-    for (let i = 0; i < R; i++) pill(i, h + line * 2, C.ink);
-    for (let i = 0; i < R; i++) pill(i, h, C.accent);
-
+    const wide = clamp(W / H, 1, 1.18);                  // on a wide stage the swirl is an oval
+    const room = Math.min(W * .47 / wide, H * .44) / (TURNS.length + .6);   // the most space one ring can have
+    const ringGap = room * lerp(.74, 1, loose), fs = room * .52;
     ctx.font = `500 ${fs}px ${C['font-display']}`;
-    ctx.fillStyle = C.ink; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    for (let i = 0; i < R; i++) {
-      ctx.globalAlpha = i ? seg(spread, .5, .9) : 1;          // while the stack is closed, only one word shows
-      ctx.save(); ctx.translate(x[i], y[i]); ctx.rotate(tilt[i]); ctx.fillText(word(), 0, fs * .04); ctx.restore();
+    const tw = ctx.measureText(word()).width || 1;
+
+    // work out where every word is
+    const words = [];
+    let n = 0;
+    TURNS.forEach((turns, j) => {
+      const r = ringGap * (1.6 + j), count = Math.max(3, Math.floor(Math.PI * r * (1 + wide) / (tw + fs * 1.6)));
+      for (let i = 0; i < count; i++, n++) {
+        if (j > 0 && chance(n) < .2) continue;          // leave some gaps, so the shape is lumpy and has holes
+        const a = i / count * Math.PI * 2 + j * .7 - T * turns - p * 5 / (1 + j * .5);   // counterclockwise, center fastest
+        const rr = r * (1 + .045 * Math.sin(a * 2 + j + T * 4) + .025 * Math.sin(a * 3 - T * 6));   // rings wobble in and out
+        const x = W / 2 + rr * Math.cos(a) * wide, y = H / 2 + rr * Math.sin(a);
+        // the pointer pushes nearby words away. they ease out and ease back, like something floating
+        const dx = x - ptr.x, dy = y - ptr.y, d = Math.hypot(dx, dy) || 1, reach = ringGap * 3.2;
+        const f = ptr.on && !reduce ? Math.max(0, 1 - d / reach) * reach * .55 : 0;
+        push[n * 2] += (dx / d * f - push[n * 2]) * .1; push[n * 2 + 1] += (dy / d * f - push[n * 2 + 1]) * .1;
+        words.push([x + push[n * 2], y + push[n * 2 + 1], Math.atan2(Math.cos(a), -Math.sin(a) * wide)]);
+      }
+    });
+
+    // the liquid. every word adds to a "field" around itself: strongest along the word, fading to nothing
+    // a short way out. where fields from neighboring words overlap they add up, which is what makes
+    // the shapes reach for each other and merge.
+    field.fill(0);
+    const half = (tw / 2 - fs * .1) / PX, far = fs * 1.9 / PX;      // half the word's length, and how far its field reaches
+    for (const [wx, wy, rot] of words) {
+      const cx = wx / PX, cy = wy / PX, c = Math.cos(rot), s = Math.sin(rot);
+      const bx = Math.abs(c) * half + far, by = Math.abs(s) * half + far;   // only visit the pixels near this word
+      for (let y = Math.max(0, Math.floor(cy - by)); y <= Math.min(LH - 1, cy + by); y++)
+        for (let x = Math.max(0, Math.floor(cx - bx)); x <= Math.min(LW - 1, cx + bx); x++) {
+          const dx = x - cx, dy = y - cy, along = dx * c + dy * s, across = dy * c - dx * s;
+          const past = along - clamp(along, -half, half);            // distance beyond the end of the word, if any
+          let k = 1 - (past * past + across * across) / (far * far);
+          if (k > 0) { k *= k; field[y * LW + x] += k * k; }
+        }
     }
-    ctx.globalAlpha = 1;
+    // a little field is the outline color, a lot is the fill color, none is clear
+    const [r0, g0, b0] = rgb(C.ink), [r1, g1, b1] = rgb(C.accent);
+    for (let i = 0; i < field.length; i++) {
+      const v = field[i];
+      if (v < RIM) { px32[i] = 0; continue; }
+      const k = clamp((v - POOL) / .1);                              // short blends keep both edges smooth
+      px32[i] = ((clamp((v - RIM) / .035) * 255 << 24) | (lerp(b0, b1, k) << 16) | (lerp(g0, g1, k) << 8) | lerp(r0, r1, k)) >>> 0;
+    }
+    liquid.putImageData(img, 0, 0);
+
+    ctx.clearRect(0, 0, W, H);                          // the words are never blurred, so they stay sharp and separate
+    ctx.fillStyle = C.ink; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    for (const [x, y, rot] of words) { ctx.save(); ctx.translate(x, y); ctx.rotate(rot); ctx.fillText(word(), 0, fs * .04); ctx.restore(); }
   }
 
 
   function frame(now) {
     const r = section.getBoundingClientRect();
-    if (r.bottom > 0 && r.top < innerHeight) {                           // only draw while the study is on screen
+    if (reduce || (r.bottom > 0 && r.top < innerHeight)) {               // only redraw while the study is on screen
       const p = reduce ? REST : clamp(-r.top / (r.height - innerHeight));
       draw(p, reduce ? 0 : now / 1000);                                  // p = scroll progress, second value = seconds
       bar.style.width = (p * 100) + '%';

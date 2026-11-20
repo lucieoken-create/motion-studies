@@ -58,7 +58,7 @@
     <section class="intro">
       <span class="eyebrow">Motion study · ribbon twist</span>
       <h1>A ribbon that turns over</h1>
-      <p class="lead">A flat band of color starts to bend as you scroll, then twists so you see it from the other side. The twist travels down the ribbon as you go.</p>
+      <p class="lead">One ribbon of color glides down the page in slow curves. Scrolling deepens the curves, then turns the ribbon over so you see its other side.</p>
     </section>
   </div>
 
@@ -118,8 +118,9 @@
     canvas.width = W * d; canvas.height = H * d; ctx.setTransform(d, 0, 0, d, 0, 0); };
 
   const N = 9;                                   // number of color bands in the ribbon
+  const LOOP = 24;                               // seconds before the motion repeats exactly
   const REST = .85;                              // the still frame shown when motion is turned off
-  const PHASES = [[0, 'Flat'], [.06, 'Bending'], [.4, 'Twisting'], [.85, 'Turned']];
+  const PHASES = [[0, 'Gliding'], [.06, 'Bending'], [.4, 'Turning'], [.85, 'Turned']];
   const STEP = 4;                                // one outline point every 4px down the page
 
   // the band colors: a ramp through the theme's own colors, dark to light
@@ -127,30 +128,37 @@
     const k = i / (N - 1) * (stops.length - 1), a = Math.floor(k);
     return mix(stops[a], stops[Math.min(a + 1, stops.length - 1)], k - a); };
 
-  let mid = [], half = [];                       // the ribbon's center line and half-width at each point
-  const band = (u0, u1, dx = 0) => {             // one filled shape between two positions across the ribbon
+  let mid = [], half = [], lean = [];            // per point: the center line, the half-width, and which way "across" points
+  const band = (u0, u1) => {                     // one filled shape between two positions across the ribbon (-1..1)
     ctx.beginPath();
-    for (let i = 0; i < mid.length; i++) ctx.lineTo(mid[i] + dx + u0 * half[i], i * STEP - 8 + dx);
-    for (let i = mid.length - 1; i >= 0; i--) ctx.lineTo(mid[i] + dx + u1 * half[i], i * STEP - 8 + dx);
+    for (let i = 0; i < mid.length; i++) ctx.lineTo(mid[i] + u0 * half[i] * lean[i][0], i * STEP - 40 + u0 * half[i] * lean[i][1]);
+    for (let i = mid.length - 1; i >= 0; i--) ctx.lineTo(mid[i] + u1 * half[i] * lean[i][0], i * STEP - 40 + u1 * half[i] * lean[i][1]);
     ctx.fill();
   };
 
   function draw(p, t) {
+    const T = t / LOOP * Math.PI * 2;                   // whole-number multiples of T repeat cleanly
     // timing: change these ranges to retime the study
-    const bend = .1 + .9 * ease(seg(p, .04, .45));      // the center line starts to wander
+    const bend = .3 + .7 * ease(seg(p, .04, .45));      // how far the center line swings
     const twist = ease(seg(p, .35, .85));               // the ribbon turns over
-    const HW = Math.min(W * .2, 210);
+    const HW = Math.min(W * .19, 200);
 
-    mid = []; half = [];
-    for (let y = -8; y <= H + 8; y += STEP) {
+    mid = []; half = []; lean = [];
+    for (let y = -40; y <= H + 40; y += STEP) {
       const v = y / H;
-      mid.push(W / 2 + bend * W * .17 * (.75 * Math.sin(v * 4.2 + t * .5 - p * 5) + .25 * Math.sin(v * 9.1 - t * .35 + 1)));
-      // where this drops below zero the ribbon has flipped, and the bands show in reverse order
-      half.push(HW * (1 - twist + twist * Math.cos(v * 3.4 - p * 7 + t * .25)));
+      // the curves slide down the page, like skiers taking the same turns side by side
+      mid.push(W / 2 + bend * W * .17 * (.86 * Math.sin(v * 4.2 - T * 2 - p * 5) + .14 * Math.sin(v * 8.4 - T * 3 + 1)));
+      // the turn: above zero is face up, below is face down. it snaps through the middle quickly, so the
+      // ribbon is only edge-on for a moment and always reads as one piece. with no twist it never gets there.
+      const turn = Math.cos(v * 3.4 - T - p * 7) + 1.4 * (1 - twist);
+      half.push(HW * turn / Math.sqrt(turn * turn + .1));
+    }
+    for (let i = 0; i < mid.length; i++) {              // "across" tips with the slope, so the bands stay side by side through a bend
+      const slope = (mid[Math.min(i + 1, mid.length - 1)] - mid[Math.max(i - 1, 0)]) / (2 * STEP) * .35;
+      const len = Math.hypot(1, slope); lean.push([1 / len, -slope / len]);
     }
 
     ctx.fillStyle = C.bg; ctx.fillRect(0, 0, W, H);
-    ctx.fillStyle = mix(C.bg, C.ink, .16); band(-1, 1, 14);   // hard offset shadow, no blur
     // each band is painted from its own edge to the far edge, so the next one covers the seam
     for (let i = 0; i < N; i++) { ctx.fillStyle = ramp(i); band(-1 + 2 * i / N, 1); }
   }
@@ -158,7 +166,7 @@
 
   function frame(now) {
     const r = section.getBoundingClientRect();
-    if (r.bottom > 0 && r.top < innerHeight) {                           // only draw while the study is on screen
+    if (reduce || (r.bottom > 0 && r.top < innerHeight)) {               // only redraw while the study is on screen
       const p = reduce ? REST : clamp(-r.top / (r.height - innerHeight));
       draw(p, reduce ? 0 : now / 1000);                                  // p = scroll progress, second value = seconds
       bar.style.width = (p * 100) + '%';
