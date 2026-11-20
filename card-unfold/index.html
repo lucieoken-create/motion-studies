@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="neutral">
+<html lang="en" data-theme="hijinx">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -80,7 +80,7 @@
   <div class="wrap">
     <header class="top">
       <a class="label" href="../">← motion-studies</a>
-      <button class="theme-btn" id="themeBtn">Theme: neutral</button>
+      <button class="theme-btn" id="themeBtn">Theme: hijinx</button>
     </header>
     <section class="intro">
       <span class="eyebrow">Motion study · card unfold</span>
@@ -125,7 +125,7 @@
   </template>
 
 <script>
-/* theme toggle: add #hijinx to the URL to open in the hijinx theme */
+/* theme toggle. hijinx is the default: add #neutral to the URL to open in the neutral theme */
 (() => {
   const root = document.documentElement, btn = document.getElementById('themeBtn');
   const fonts = () => { if (document.getElementById('hjFonts')) return;
@@ -133,8 +133,8 @@
     l.href = 'https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500&family=IBM+Plex+Sans:wght@400;500&family=Space+Mono&display=swap';
     document.head.appendChild(l); };
   const set = t => { root.dataset.theme = t; btn.textContent = 'Theme: ' + t; if (t === 'hijinx') fonts(); };
-  if (location.hash === '#hijinx') set('hijinx');
-  addEventListener('hashchange', () => set(location.hash === '#hijinx' ? 'hijinx' : 'neutral'));
+  set(location.hash === '#neutral' ? 'neutral' : 'hijinx');
+  addEventListener('hashchange', () => set(location.hash === '#neutral' ? 'neutral' : 'hijinx'));
   btn.addEventListener('click', () => set(root.dataset.theme === 'hijinx' ? 'neutral' : 'hijinx'));
 })();
 

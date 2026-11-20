@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="neutral">
+<html lang="en" data-theme="hijinx">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -51,7 +51,7 @@
   <div class="wrap">
     <header class="top">
       <span class="label">motion-studies</span>
-      <button class="theme-btn" id="themeBtn">Theme: neutral</button>
+      <button class="theme-btn" id="themeBtn">Theme: hijinx</button>
     </header>
     <section class="intro">
       <span class="label">Scroll-driven motion, one file each</span>
@@ -60,42 +60,42 @@
     </section>
     <section class="grid">
       <a class="study" href="card-unfold/">
-        <img src="previews/card-unfold-neutral.gif" data-preview="card-unfold" alt="A card folded in three opens flap by flap, then grows to fill the screen">
+        <img src="previews/card-unfold-hijinx.gif" data-preview="card-unfold" alt="A card folded in three opens flap by flap, then grows to fill the screen">
         <span class="label">01</span>
         <h2>Card unfold</h2>
         <p>A card folded in three opens on its hinges as you scroll, then grows until it's the page.</p>
         <span class="go">Open the study <span>→</span></span>
       </a>
       <a class="study" href="card-flip/">
-        <img src="previews/card-flip-neutral.gif" data-preview="card-flip" alt="A wide photo splits into four strips that flip into playing cards">
+        <img src="previews/card-flip-hijinx.gif" data-preview="card-flip" alt="A wide photo splits into four strips that flip into playing cards">
         <span class="label">02</span>
         <h2>Card flip</h2>
         <p>A wide photo splits into four strips that flip over one by one and land as playing cards.</p>
         <span class="go">Open the study <span>→</span></span>
       </a>
       <a class="study" href="stripe-swell/">
-        <img src="previews/stripe-swell-neutral.gif" data-preview="stripe-swell" alt="A column of stripes swells and pinches, then widens to fill the screen">
+        <img src="previews/stripe-swell-hijinx.gif" data-preview="stripe-swell" alt="A column of stripes swells and pinches, then widens to fill the screen">
         <span class="label">03</span>
         <h2>Stripe swell</h2>
         <p>Bulges drift down a column of mirrored stripes. Scrolling swells them, then widens the column until the stripes are the page.</p>
         <span class="go">Open the study <span>→</span></span>
       </a>
       <a class="study" href="type-cascade/">
-        <img src="previews/type-cascade-neutral.gif" data-preview="type-cascade" alt="A repeated word circles in a swirl of merging liquid shapes">
+        <img src="previews/type-cascade-hijinx.gif" data-preview="type-cascade" alt="A repeated word circles in a swirl of merging liquid shapes">
         <span class="label">04</span>
         <h2>Type cascade</h2>
         <p>One word, repeated, turns slowly in a lumpy swirl, and the shapes around the words melt together. No scrolling: it just plays, and your pointer pushes the words away.</p>
         <span class="go">Open the study <span>→</span></span>
       </a>
       <a class="study" href="fluid-blobs/">
-        <img src="previews/fluid-blobs-neutral.gif" data-preview="fluid-blobs" alt="Drifting circles of color melt together into thick blobs">
+        <img src="previews/fluid-blobs-hijinx.gif" data-preview="fluid-blobs" alt="Drifting circles of color melt together into thick blobs">
         <span class="label">05</span>
         <h2>Fluid blobs</h2>
         <p>Plain circles drift past each other. Scrolling melts them into thick blobs whose colors bleed together. Your pointer is a circle too.</p>
         <span class="go">Open the study <span>→</span></span>
       </a>
       <a class="study" href="ribbon-twist/">
-        <img src="previews/ribbon-twist-neutral.gif" data-preview="ribbon-twist" alt="A ribbon of color bands glides down the page and turns over">
+        <img src="previews/ribbon-twist-hijinx.gif" data-preview="ribbon-twist" alt="A ribbon of color bands glides down the page and turns over">
         <span class="label">06</span>
         <h2>Ribbon twist</h2>
         <p>One ribbon of color glides down the page in slow curves. Scrolling deepens the curves, then turns it over.</p>
@@ -108,6 +108,7 @@
     </footer>
   </div>
 <script>
+/* the hijinx theme is the default: add #neutral to the URL to open in the neutral theme */
 (() => {
   const root = document.documentElement, btn = document.getElementById('themeBtn');
   const fonts = () => { if (document.getElementById('hjFonts')) return;
@@ -115,10 +116,10 @@
     l.href = 'https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500&family=IBM+Plex+Sans:wght@400;500&family=Space+Mono&display=swap';
     document.head.appendChild(l); };
   const set = t => { root.dataset.theme = t; btn.textContent = 'Theme: ' + t; if (t === 'hijinx') fonts();
-    document.querySelectorAll('.study').forEach(a => a.hash = t === 'hijinx' ? 'hijinx' : '');
+    document.querySelectorAll('.study').forEach(a => a.hash = t === 'neutral' ? 'neutral' : '');
     document.querySelectorAll('[data-preview]').forEach(img => img.src = `previews/${img.dataset.preview}-${t}.gif`); };
-  if (location.hash === '#hijinx') set('hijinx');
-  addEventListener('hashchange', () => set(location.hash === '#hijinx' ? 'hijinx' : 'neutral'));
+  set(location.hash === '#neutral' ? 'neutral' : 'hijinx');
+  addEventListener('hashchange', () => set(location.hash === '#neutral' ? 'neutral' : 'hijinx'));
   btn.addEventListener('click', () => set(root.dataset.theme === 'hijinx' ? 'neutral' : 'hijinx'));
 })();
 </script>
