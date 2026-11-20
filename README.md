@@ -10,7 +10,7 @@ Small scroll animations for marketing pages. Each study is one HTML file with no
 
 A card folded in three opens on its hinges as you scroll, then grows until it fills the screen.
 
-| Neutral (default) | hijinx theme |
+| Neutral | hijinx theme (default) |
 | --- | --- |
 | ![Card unfold, neutral theme](previews/card-unfold-neutral.gif) | ![Card unfold, hijinx theme](previews/card-unfold-hijinx.gif) |
 
@@ -20,7 +20,7 @@ A card folded in three opens on its hinges as you scroll, then grows until it fi
 
 A wide photo splits into four strips. Each strip flips over, one after another, and lands as a playing card with its back showing. Then the cards fan out into a hand. You can try it with your own photo right on the page.
 
-| Neutral (default) | hijinx theme |
+| Neutral | hijinx theme (default) |
 | --- | --- |
 | ![Card flip, neutral theme](previews/card-flip-neutral.gif) | ![Card flip, hijinx theme](previews/card-flip-hijinx.gif) |
 
@@ -30,7 +30,7 @@ A wide photo splits into four strips. Each strip flips over, one after another, 
 
 Bulges drift slowly down a column of stripes, mirrored exactly left and right. Scrolling makes them swell, then widens the column until the stripes are the whole page.
 
-| Neutral (default) | hijinx theme |
+| Neutral | hijinx theme (default) |
 | --- | --- |
 | ![Stripe swell, neutral theme](previews/stripe-swell-neutral.gif) | ![Stripe swell, hijinx theme](previews/stripe-swell-hijinx.gif) |
 
@@ -40,7 +40,7 @@ Bulges drift slowly down a column of stripes, mirrored exactly left and right. S
 
 One word, repeated, turns slowly like oil on water: quicker in the middle, slower at the rim. The swirl is lumpy, with more layers in some directions than others, like the teeth of a gear. The shapes around the words melt together and pull apart, while the words stay sharp. Move your pointer through it and the words get out of the way. This one does not use scroll: it is one screen tall and just plays. You can type your own word right on the page.
 
-| Neutral (default) | hijinx theme |
+| Neutral | hijinx theme (default) |
 | --- | --- |
 | ![Type cascade, neutral theme](previews/type-cascade-neutral.gif) | ![Type cascade, hijinx theme](previews/type-cascade-hijinx.gif) |
 
@@ -50,7 +50,7 @@ One word, repeated, turns slowly like oil on water: quicker in the middle, slowe
 
 It starts as plain circles of color drifting past each other. Scrolling melts them: neighbors pool into thick blobs, and their colors bleed where they meet. Your pointer is a circle too.
 
-| Neutral (default) | hijinx theme |
+| Neutral | hijinx theme (default) |
 | --- | --- |
 | ![Fluid blobs, neutral theme](previews/fluid-blobs-neutral.gif) | ![Fluid blobs, hijinx theme](previews/fluid-blobs-hijinx.gif) |
 
@@ -60,7 +60,7 @@ It starts as plain circles of color drifting past each other. Scrolling melts th
 
 One ribbon of color glides down the page in slow curves. Scrolling deepens the curves, then turns the ribbon over so you see its other side.
 
-| Neutral (default) | hijinx theme |
+| Neutral | hijinx theme (default) |
 | --- | --- |
 | ![Ribbon twist, neutral theme](previews/ribbon-twist-neutral.gif) | ![Ribbon twist, hijinx theme](previews/ribbon-twist-hijinx.gif) |
 
@@ -79,7 +79,7 @@ Every study respects reduced motion: people who've turned animation off in their
 
 ## Themes
 
-Every study ships with two themes. **Neutral** is the default. **hijinx** is the palette and type from [hijinx.studio](https://hijinx.studio). Switch with the button in the top corner, or add `#hijinx` to the URL. A theme changes the art too: neutral draws its placeholders in code (a wireframe globe, a flat landscape, a crosshatch card back), so there are no image files to license, and hijinx uses Lucie's own artwork. To add your own, copy the `[data-theme="hijinx"]` block, rename it and change the values, then add your art for that theme.
+Every study ships with two themes. **hijinx**, the palette and type from [hijinx.studio](https://hijinx.studio), is what the pages open in. **Neutral** is a plain monochrome version to start your own from. Switch with the button in the top corner, or add `#neutral` to the URL. A theme changes the art too: neutral draws its placeholders in code (a wireframe globe, a flat landscape, a crosshatch card back), so there are no image files to license, and hijinx uses Lucie's own artwork. To add your own, copy the `[data-theme="hijinx"]` block, rename it and change the values, then add your art for that theme.
 
 ## Use them with Claude or another AI coding tool
 
