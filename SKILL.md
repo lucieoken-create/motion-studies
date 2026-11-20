@@ -1,6 +1,6 @@
 ---
 name: motion-studies
-description: Add a scroll-driven motion study (card unfold, card flip, stripe swell, type cascade, fluid blobs, ribbon twist) to a web page and restyle it to the project's brand. Use when someone asks for one of these animations by name, wants a scroll animation that reveals an image or card, or wants a moving hero background.
+description: Add a scroll-driven motion study (card unfold, card flip, stripe swell, type cascade, fluid blobs, ribbon twist, cell fill) to a web page and restyle it to the project's brand. Use when someone asks for one of these animations by name, wants a scroll animation that reveals an image or card, or wants a moving hero background.
 ---
 
 # motion-studies
@@ -15,8 +15,9 @@ Each study in this repo is one self-contained HTML file: a sticky stage inside a
 | Type cascade | `type-cascade/index.html` | A repeated word swirls inside merging liquid shapes; the pointer pushes words away |
 | Fluid blobs | `fluid-blobs/index.html` | Drifting circles melt together into thick blobs with blended colors; the pointer is a circle too |
 | Ribbon twist | `ribbon-twist/index.html` | A ribbon of color bands glides down the page, then turns over |
+| Cell fill | `cell-fill/index.html` | A fixed spreadsheet grid animates through cell colors alone; one cell follows the pointer |
 
-The two card studies move DOM elements with CSS transforms and only change when the page scrolls. The other four draw on a `<canvas>` every frame: `draw(p, t)` takes scroll progress `p` (0 to 1) and the time `t` in seconds, so they keep drifting between scrolls. Type cascade ignores `p`: its section is one screen tall, and it only plays and reacts to the pointer.
+The two card studies move DOM elements with CSS transforms and only change when the page scrolls. The other five draw on a `<canvas>`: `draw(p, t)` takes scroll progress `p` (0 to 1) and the time `t` in seconds, so they keep drifting between scrolls. Type cascade and cell fill ignore `p`: their sections are one screen tall, and they only play and react to the pointer.
 
 ## Adding a study to a project
 

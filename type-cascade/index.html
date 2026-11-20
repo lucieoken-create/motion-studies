@@ -122,7 +122,7 @@
   // colors and fonts are read from the theme variables, so a new theme restyles the drawing too
   const C = {};
   const readTheme = () => { const s = getComputedStyle(root);
-    for (const n of ['bg', 'ink', 'surface', 'accent', 'accent-2', 'dark', 'font-display']) C[n] = s.getPropertyValue('--' + n).trim(); };
+    for (const n of ['bg', 'ink', 'surface', 'accent', 'accent-2', 'dark', 'font-display', 'font-mono']) C[n] = s.getPropertyValue('--' + n).trim(); };
 
   // two layers: the liquid, drawn pixel by pixel on a small canvas that is stretched to fit, and the words on top
   const liquid = document.getElementById('liquid').getContext('2d');

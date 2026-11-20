@@ -78,6 +78,18 @@ One ribbon of color glides down the page in slow curves. Scrolling deepens the c
 
 [Open it live](https://lucieoken-create.github.io/motion-studies/ribbon-twist/) · [Code](ribbon-twist/index.html)
 
+### 07 · Cell fill
+
+`Pointer`
+
+A spreadsheet where nothing ever moves. Only the fill color of each cell changes, a few times a second, and that is enough for round wipes, stripes that fold into a tunnel, pulsing rings and a word spelled out in cells. One cell is special: it follows your pointer, and the patterns form around it. It loops every 14 seconds and does not use scroll. You can type your own word right on the page.
+
+| Neutral | hijinx theme (default) |
+| --- | --- |
+| ![Cell fill, neutral theme](previews/cell-fill-neutral.gif) | ![Cell fill, hijinx theme](previews/cell-fill-hijinx.gif) |
+
+[Open it live](https://lucieoken-create.github.io/motion-studies/cell-fill/) · [Code](cell-fill/index.html)
+
 ## Use one in your project
 
 1. Copy the study's `index.html` (and any image it points to in `assets/`).
@@ -85,7 +97,7 @@ One ribbon of color glides down the page in slow curves. Scrolling deepens the c
 3. Swap the content. The unfold's card face lives in the `<template>` near the bottom of the page; the flip's picture is the `PHOTOS` list at the top of its script, one per theme.
 4. Retime it. Each script has a short "timing" block where every step is a slice of scroll progress from 0 to 1. The section's `height` (420vh) sets how much scrolling the whole thing takes.
 
-Studies 03 to 06 are drawn on a canvas, so there's no markup to swap. Their content is a few constants at the top of the script: the number of stripes or bands, the word in the swirl (`WORDS`, one per theme), how many circles there are, and `LOOP`, the number of seconds before the motion repeats exactly. Their colors still come from the same theme variables.
+Studies 03 to 07 are drawn on a canvas, so there's no markup to swap. Their content is a few constants at the top of the script: the number of stripes or bands, the word in the swirl (`WORDS`, one per theme), how many circles there are, and `LOOP`, the number of seconds before the motion repeats exactly. Their colors still come from the same theme variables.
 
 Every study respects reduced motion: people who've turned animation off in their settings see the finished state, still.
 
@@ -103,7 +115,11 @@ The two card studies draw an image once and slice it into pieces, then move the 
 
 The four canvas studies redraw every frame from two numbers: scroll progress (0 to 1) and the time in seconds. Scroll decides the big change and time adds the drift, so each one is still alive when you stop scrolling. Stripe swell and ribbon twist fill shapes between curves. Type cascade and fluid blobs are drawn pixel by pixel on a small canvas that is stretched to fit: every word or circle spreads into the pixels around it, the way a blur would, and then each pixel is made either solid or clear. Where two spreads overlap they add up, which is why shapes reach for each other and merge. Those two also react to the pointer.
 
+Cell fill works differently: it asks one question for every cell, "what color are you right now?", and each scene is a different answer based on how far the cell is from the special one. It only repaints when something changes, eight times a second.
+
 ## Credits
+
+Cell fill (07) was inspired by Spotify's [Spreadbeats](https://ads.spotify.com/spreadbeats), a music video made inside a spreadsheet by FCB New York with music by John Summit. The study borrows the idea of animating with cell fills and is otherwise built from scratch.
 
 Studies 03 to 06 started from pieces on [brik.space](https://brik.space) and were rebuilt from scratch with different motion, color and code: [Le Parc - Visual Blueprint](https://brik.space/tools/remix-of-visual-blueprint-studio-mpzo7ppa) and [Liquid Rainbow Topography Hero](https://brik.space/tools/liquid-topography-hero-remix-remix-mpzo70fv) by Maya Netzer, [type for fun 04](https://brik.space/tools/remix-of-remix-of-cascade-type-msfywfiu) by Clueless studio, and [BLB](https://brik.space/tools/thresholded-fluid-blo-mo8z7jxh) by Or Yogev.
 
