@@ -1,6 +1,6 @@
 # motion-studies
 
-Small scroll animations for marketing pages. Each study is one HTML file with no libraries and no build step. Open it in a browser, change a few variables, and drop it into your own site. Studies 03 to 06 also drift on their own between scrolls, so they work as hero backgrounds.
+Small scroll animations for marketing pages. Each study is one HTML file with no libraries and no build step. Open it in a browser, change a few variables, and drop it into your own site. Studies 03 to 06 also move on their own, so they work as hero backgrounds. Type cascade (04) leaves scroll out and responds to the pointer only.
 
 **See them live:** [lucieoken-create.github.io/motion-studies](https://lucieoken-create.github.io/motion-studies/)
 
@@ -38,7 +38,7 @@ Bulges drift slowly down a column of stripes, mirrored exactly left and right. S
 
 ### 04 · Type cascade
 
-One word, repeated, turns slowly like oil on water: quicker in the middle, slower at the rim. The swirl is lumpy, with more layers in some directions than others, like the teeth of a gear. The shapes around the words melt together and pull apart, while the words stay sharp. Your pointer pushes them away, and scrolling loosens the swirl. You can type your own word right on the page.
+One word, repeated, turns slowly like oil on water: quicker in the middle, slower at the rim. The swirl is lumpy, with more layers in some directions than others, like the teeth of a gear. The shapes around the words melt together and pull apart, while the words stay sharp. Move your pointer through it and the words get out of the way. This one does not use scroll: it is one screen tall and just plays. You can type your own word right on the page.
 
 | Neutral (default) | hijinx theme |
 | --- | --- |

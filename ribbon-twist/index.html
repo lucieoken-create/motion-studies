@@ -167,7 +167,8 @@
   function frame(now) {
     const r = section.getBoundingClientRect();
     if (reduce || (r.bottom > 0 && r.top < innerHeight)) {               // only redraw while the study is on screen
-      const p = reduce ? REST : clamp(-r.top / (r.height - innerHeight));
+      const span = r.height - innerHeight;                               // how much scrolling the study takes
+      const p = reduce ? REST : span > 0 ? clamp(-r.top / span) : 0;
       draw(p, reduce ? 0 : now / 1000);                                  // p = scroll progress, second value = seconds
       bar.style.width = (p * 100) + '%';
       phase.textContent = PHASES.filter(s => p >= s[0]).pop()[1];
