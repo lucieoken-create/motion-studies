@@ -17,7 +17,7 @@ Each study in this repo is one self-contained HTML file: a sticky stage inside a
 | Ribbon twist | `ribbon-twist/index.html` | A ribbon of color bands glides down the page, then turns over |
 | Cell fill | `cell-fill/index.html` | A fixed spreadsheet grid animates through cell colors alone; one cell follows the pointer |
 | Corner bounce | `corner-bounce/index.html` | An icon, word or image bounces around the stage, changing color at each edge; swiping nudges it |
-| Line visualizer | `line-visualizer/index.html` | Three glowing-line presets (laser beams, swirling light trails, a burst of sparks); scroll switches preset, the pointer is the focus |
+| Line visualizer | `line-visualizer/index.html` | Three glowing-line presets (beams of light, swirling ribbons, a burst of sparks); scroll switches preset, the pointer is the focus |
 
 The two card studies move DOM elements with CSS transforms and only change when the page scrolls. The other five draw on a `<canvas>`: `draw(p, t)` takes scroll progress `p` (0 to 1) and the time `t` in seconds, so they keep drifting between scrolls. Type cascade, cell fill and corner bounce ignore `p`: their sections are one screen tall, and they only play and react to the pointer.
 

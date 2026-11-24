@@ -62,7 +62,7 @@
     <section class="intro">
       <div class="meta"><span class="eyebrow">Motion study · line visualizer</span><span class="tag">Scroll</span><span class="tag pointer">Pointer</span></div>
       <h1>Light that moves like music</h1>
-      <p class="lead">Three presets, like an old music visualizer, each drawn in thin bright lines on a dark screen. Laser beams that cross at one point. Light trails that swirl like a torch waved in a long exposure. A burst of sparks. Scrolling switches between them, and all three gather around your pointer.</p>
+      <p class="lead">Three presets, like an old music visualizer, each drawn in thin bright lines on a dark screen. Beams of light that cross at one point and fan out. Ribbons of light that swirl like ink in water. A burst of sparks. Scrolling switches between them, and all three gather around your pointer.</p>
     </section>
   </div>
 
@@ -125,7 +125,7 @@
   let sprites = {};
   document.addEventListener('themechange', () => { fresh = true; sprites = {}; });
 
-  const BEAMS = 9, PENS = 48, SPARKS = 140;      // how many beams, light trails and sparks
+  const BEAMS = 8, RIBBONS = 13, SPARKS = 140;   // how many beams, ribbons of light and sparks
   const TRAIL = .18;                             // how fast old frames fade: lower = longer smears, 1 = none
   const REST = .5;                               // the still frame shown when motion is turned off
   const PHASES = [[0, 'Beams'], [.32, 'Swirl'], [.68, 'Burst']];
@@ -137,12 +137,13 @@
 
   const rand = n => { const v = Math.sin(n * 12.9898) * 43758.5453; return v - Math.floor(v); };   // a fixed "random" 0..1
 
-  // a line of light, the way a laser or a torch in a long exposure looks: a thin white-hot core inside a colored halo
-  const light = (pts, color, a) => {
+  // a line of light: a bright core inside a wider, fainter halo of the same color.
+  // "hot" makes the core pure white, for sparks; without it the core keeps some color and reads softer.
+  const light = (pts, color, a, hot) => {
     if (a <= 0 || pts.length < 2) return;
     ctx.beginPath(); for (const [x, y] of pts) ctx.lineTo(x, y);
-    ctx.strokeStyle = color; ctx.globalAlpha = a * .32; ctx.lineWidth = 3.5; ctx.stroke();
-    ctx.strokeStyle = C.bg; ctx.globalAlpha = a; ctx.lineWidth = 1; ctx.stroke();
+    ctx.strokeStyle = color; ctx.globalAlpha = a * (hot ? .32 : .2); ctx.lineWidth = hot ? 3.5 : 5; ctx.stroke();
+    ctx.strokeStyle = hot ? C.bg : mix(color, C.bg, .45); ctx.globalAlpha = a * (hot ? 1 : .8); ctx.lineWidth = 1.1; ctx.stroke();
   };
   // a glowing dot. the soft circle is drawn once per color and then stamped wherever it is needed
   const dot = (x, y, r, color, a) => {
@@ -154,22 +155,28 @@
     ctx.globalAlpha = a; ctx.drawImage(sprites[color], x - r * 3, y - r * 3, r * 6, r * 6);
   };
 
-  // the swirl is made of "pens": points of light carried along by a current, each remembering its recent path
-  const pens = Array.from({ length: PENS }, (_, i) => ({ n: i, tail: [], life: 0 }));
+  // the swirl is made of ribbons: a handful of lines that set off side by side and are carried along by a
+  // current, each remembering its recent path. because they start as neighbors they stay roughly parallel.
+  const LINES = 7;                               // lines in each ribbon
+  const ribbons = Array.from({ length: RIBBONS }, (_, i) => ({ n: i, life: 0, age: 0, lines: [] }));
   const current = (x, y, t) => {                        // which way the current flows at a point: around the focus and four slow whirlpools
-    let vx = .1, vy = -.03;
-    const pool = (px, py, k) => { const dx = x - px, dy = y - py, d = dx * dx + dy * dy + 5000;
-      vx += (-dy * k + dx * .1) / d * 190; vy += (dx * k + dy * .1) / d * 190; };
-    pool(focus.x, focus.y, 1.6);
+    let vx = .12, vy = -.04;
+    const pool = (px, py, k) => { const dx = x - px, dy = y - py, d = dx * dx + dy * dy + 9000;
+      vx += (-dy * k + dx * .06) / d * 190; vy += (dx * k + dy * .06) / d * 190; };
+    pool(focus.x, focus.y, 1.5);
     for (let k = 0; k < 4; k++) pool(W * (.5 + .36 * Math.cos(k * 1.57 + t * .07)), H * (.5 + .34 * Math.sin(k * 1.57 + t * .07)), k % 2 ? 1 : -1);
     const m = Math.hypot(vx, vy) || 1; return [vx / m, vy / m];
   };
-  const movePens = (dt, t, speed) => pens.forEach(pen => {
-    if (!pen.tail.length || pen.life < 0 || pen.x < -60 || pen.x > W + 60 || pen.y < -60 || pen.y > H + 60) {   // start a fresh trail somewhere new
-      pen.n += PENS; pen.x = W * rand(pen.n); pen.y = H * rand(pen.n + .5); pen.life = 3 + rand(pen.n + .3) * 5; pen.tail = []; }
-    const [vx, vy] = current(pen.x, pen.y, t);
-    pen.x += vx * speed * dt; pen.y += vy * speed * dt; pen.life -= dt;
-    pen.tail.push([pen.x, pen.y]); if (pen.tail.length > 80) pen.tail.shift();
+  const moveRibbons = (dt, t, speed) => ribbons.forEach(rb => {
+    if (rb.life <= 0) {                                 // spent: start a fresh ribbon somewhere new, its lines spaced across the current
+      rb.n += RIBBONS; rb.life = 5 + rand(rb.n + .3) * 5; rb.age = 0;
+      const x = W * rand(rb.n), y = H * rand(rb.n + .5), [vx, vy] = current(x, y, t);
+      rb.lines = Array.from({ length: LINES }, (_, k) => ({ x: x - vy * (k - 3) * 7, y: y + vx * (k - 3) * 7, tail: [] }));
+    }
+    rb.life -= dt; rb.age += dt;
+    for (const ln of rb.lines) { const [vx, vy] = current(ln.x, ln.y, t);
+      ln.x += vx * speed * dt; ln.y += vy * speed * dt;
+      ln.tail.push([ln.x, ln.y]); if (ln.tail.length > 90) ln.tail.shift(); }
   });
   const sparks = Array.from({ length: SPARKS }, (_, i) => ({ n: i, born: -99, life: 0 }));
 
@@ -194,42 +201,53 @@
     ctx.globalCompositeOperation = 'lighter';           // where lights cross they add up and get brighter
     ctx.lineCap = 'round';
 
-    // preset 1, beams: straight laser lines that all pass through the focus and slowly sweep around it
+    // preset 1, beams: bands of close lines that all pass through the focus, fan out with a slight bow, and slowly sweep around it
     if (beams > 0) {
-      const far = W + H;
+      const far = (W + H) * .75;
       for (let r = 0; r < BEAMS; r++) {
         const turn = r / BEAMS * Math.PI + .5 * Math.sin(t * .13 * (1 + r % 3) + r * 2.1) + t * .03;
+        const bow = .0000009 * Math.sin(t * .2 + r * 1.9);          // how much this band curves, drifting over time
+        const wide = (.022 + .02 * rand(r + 40)) * (1 + 1.4 * beat);   // how far its lines fan apart: wider on the beat
         const color = r % 3 === 2 ? C.surface : r % 2 ? C['accent-2'] : C.accent;
-        for (let j = -2; j <= 2; j++) {                 // each beam is five lines that spread apart on the beat
-          const a = turn + j * .012 * (1 + 2 * beat), c = Math.cos(a), s = Math.sin(a);
-          light([[fx - c * far, fy - s * far], [fx + c * far, fy + s * far]], color, beams * (j ? .45 : .9));
+        const angle = (d, j) => turn + j / 3 * wide * (1 + .5 * Math.sin(d * .006 + r)) + bow * d * Math.min(Math.abs(d), 650);   // the bend stops growing far from the focus, so bands never curl back
+        for (let j = -3; j <= 3; j++) {                 // each band is seven lines
+          const pts = [];
+          for (let d = -far; d <= far; d += 24) { const a = angle(d, j); pts.push([fx + Math.cos(a) * d, fy + Math.sin(a) * d]); }
+          light(pts, color, beams * (j ? .5 : .8));
         }
-        if (r % 3 === 1) {                              // beads of light sliding out along some beams
-          ctx.strokeStyle = C.surface; ctx.lineWidth = 1.2; ctx.globalAlpha = .8 * beams;
-          for (let k = 0; k < 14; k++) { const d = ((k * 60 + t * 90) % 840 + 40) * (k % 2 ? -1 : 1);
-            ctx.beginPath(); ctx.arc(fx + Math.cos(turn + .05) * d, fy + Math.sin(turn + .05) * d, 2 + Math.abs(d) * .006, 0, 7); ctx.stroke(); }
+        if (r % 3 === 1) {                              // beads of light sliding out along the edge of some bands
+          ctx.strokeStyle = C.surface; ctx.lineWidth = 1.2; ctx.globalAlpha = .7 * beams;
+          for (let k = 0; k < 14; k++) { const d = ((k * 60 + t * 70) % 840 + 50) * (k % 2 ? -1 : 1), a = angle(d, 4.6);
+            ctx.beginPath(); ctx.arc(fx + Math.cos(a) * d, fy + Math.sin(a) * d, 2 + Math.abs(d) * .006, 0, 7); ctx.stroke(); }
         }
       }
       for (let k = 0; k < 2; k++) {                     // two jittery lines, like a sound wave, that jump on the beat
-        const pts = [], shake = 8 + 40 * beat;
+        const pts = [], shake = 6 + 26 * beat;
         for (let x = -10; x <= W + 10; x += 6) pts.push([x, fy + (x - fx) * (k ? .16 : -.1)
           + (rand(x * .37 + Math.floor(t * 24) * 7.1 + k) - .5) * shake * Math.min(1, Math.abs(x - fx) / 140)]);
-        light(pts, C.surface, .6 * beams);
+        light(pts, C.surface, .5 * beams);
       }
-      dot(fx, fy, 10, C.accent, beams);
+      dot(fx, fy, 8, C.accent, beams * .8);
     }
 
-    // preset 2, swirl: every pen leaves a bright trail, like a torch waved in front of an open camera
+    // preset 2, swirl: ribbons of light carried along the current, like light painted in a long exposure
+    // (the ribbons keep flowing even while another preset is showing, so they are already long when you scroll to them)
+    if (!warm) { warm = true; for (let k = 0; k < 160; k++) moveRibbons(1 / 60, t, 200); }
+    else if (!reduce) moveRibbons(dt, t, 200 * (1 + .6 * beat));
     if (swirl > 0) {
-      if (reduce && !warm) { warm = true; for (let k = 0; k < 140; k++) movePens(1 / 60, t, 260); }   // a still frame needs trails already drawn
-      else movePens(dt, t, 260 * (1 + .8 * beat));
-      pens.forEach((pen, i) => {
-        const color = i % 5 === 0 ? C['accent-2'] : i % 2 ? C.surface : mix(C.ink, C.surface, .5), n = pen.tail.length;
-        light(pen.tail, color, swirl * .18);            // the whole trail, faint...
-        light(pen.tail.slice(n >> 1), color, swirl * .4);          // ...the newer half, brighter...
-        light(pen.tail.slice(n - (n >> 2)), color, swirl);         // ...and the newest quarter, brightest
-        dot(pen.x, pen.y, 2.5, color, swirl);
+      ribbons.forEach((rb, i) => {
+        const color = i % 4 === 0 ? C['accent-2'] : i % 2 ? C.surface : mix(C.ink, C.surface, .5);
+        const show = swirl * clamp(rb.age / .8) * clamp(rb.life / .8);   // ease in when new and out when spent, so nothing pops
+        for (const ln of rb.lines) { const n = ln.tail.length;
+          light(ln.tail, color, show * .22);            // the whole path, faint...
+          light(ln.tail.slice(Math.floor(n * .2), Math.ceil(n * .85)), color, show * .5);   // ...and brighter through the middle, so both ends taper away
+        }
       });
+      const ring = [];                                  // one slow, wobbling outline around the focus
+      for (let n = 0; n <= 90; n++) { const a = n / 90 * Math.PI * 2;
+        const r = Math.min(W, H) * .2 * (1 + .2 * Math.sin(a * 3 + t * .4) + .1 * Math.sin(a * 5 - t * .3) + .06 * beat * Math.sin(a * 9 + t));
+        ring.push([fx + Math.cos(a) * r * 1.2, fy + Math.sin(a) * r * .9]); }
+      light(ring, C.bg, swirl * .7);
     }
 
     // preset 3, burst: sparks thrown out from the focus, each a short streak with a glowing dot at its head
@@ -245,7 +263,7 @@
         }
         const at = d => [sp.x + Math.cos(sp.a + sp.bend * d) * d, sp.y + Math.sin(sp.a + sp.bend * d) * d];
         const out = sp.speed * age * (1 - age / sp.life * .35), back = Math.max(0, out - 40 - sp.speed * .12), fade = 1 - age / sp.life;
-        light([at(back), at((back + out) / 2), at(out)], sp.color, burst * fade * .8);
+        light([at(back), at((back + out) / 2), at(out)], sp.color, burst * fade * .8, true);
         dot(...at(out), sp.r, sp.color, burst * fade);
       });
       for (let i = 0; i < 50; i++)                      // loose dots that drift and twinkle

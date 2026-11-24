@@ -106,7 +106,7 @@ One thing drifts around a dark screen, bouncing off the edges and changing color
 
 `Scroll` `Pointer`
 
-Three presets, like an old music visualizer, each drawn in thin bright lines on a dark screen. **Beams:** straight laser lines that all cross at one point and slowly sweep around it. **Swirl:** points of light carried along a current, leaving trails like a torch waved in a long exposure. **Burst:** sparks thrown outward, each a short streak with a glowing dot, and a dark sphere drifting in front. Scrolling switches between them, and all three gather around your pointer. A built-in pulse every two seconds stands in for the music; it does not listen to sound.
+Three presets, like an old music visualizer, each drawn in thin bright lines on a dark screen. **Beams:** bands of close lines that all cross at one point, fan out with a slight bow, and slowly sweep around it. **Swirl:** ribbons of parallel lines carried along a current with whirlpools in it, like ink in water. **Burst:** sparks thrown outward, each a short streak with a glowing dot, and a dark sphere drifting in front. Scrolling switches between them, and all three gather around your pointer. A built-in pulse every two seconds stands in for the music; it does not listen to sound.
 
 | Neutral | hijinx theme (default) |
 | --- | --- |
