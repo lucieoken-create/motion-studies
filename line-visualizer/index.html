@@ -61,8 +61,8 @@
     </header>
     <section class="intro">
       <div class="meta"><span class="eyebrow">Motion study · line visualizer</span><span class="tag">Scroll</span><span class="tag pointer">Pointer</span></div>
-      <h1>Lines that move like music</h1>
-      <p class="lead">Thin lines drift across a dark screen and leave a fading trail. Scrolling changes the pattern, the way an old music visualizer changed presets: long strands, then rings breathing in and out, then dotted loops. Everything gathers around your pointer.</p>
+      <h1>Light that moves like music</h1>
+      <p class="lead">Three presets, like an old music visualizer, each drawn in thin bright lines on a dark screen. Laser beams that cross at one point. Light trails that swirl like a torch waved in a long exposure. A burst of sparks. Scrolling switches between them, and all three gather around your pointer.</p>
     </section>
   </div>
 
@@ -116,78 +116,147 @@
   const readTheme = () => { const s = getComputedStyle(root);
     for (const n of ['bg', 'ink', 'surface', 'accent', 'accent-2', 'dark', 'font-display', 'font-mono']) C[n] = s.getPropertyValue('--' + n).trim(); };
 
-  let W, H, fresh = true;
-  const focus = { x: 0, y: 0 };                  // the point the patterns gather around
+  let W, H, fresh = true, last = 0, warm = false;
+  const focus = { x: 0, y: 0 };                  // the point everything gathers around
   const size = () => { const d = Math.min(devicePixelRatio || 1, 2);
     W = stage.clientWidth; H = stage.clientHeight;
     canvas.width = W * d; canvas.height = H * d; ctx.setTransform(d, 0, 0, d, 0, 0);
     focus.x = W / 2; focus.y = H / 2; fresh = true; };
-  document.addEventListener('themechange', () => fresh = true);
+  let sprites = {};
+  document.addEventListener('themechange', () => { fresh = true; sprites = {}; });
 
-  const STRANDS = 16, RINGS = 10, LOOPS = 3;     // how many of each kind of line
-  const TRAIL = .14;                             // how fast old frames fade: lower = longer trails, 1 = none
-  const LOOP = 24;                               // seconds before the motion repeats exactly
+  const BEAMS = 9, PENS = 48, SPARKS = 140;      // how many beams, light trails and sparks
+  const TRAIL = .18;                             // how fast old frames fade: lower = longer smears, 1 = none
   const REST = .5;                               // the still frame shown when motion is turned off
-  const PHASES = [[0, 'Strands'], [.3, 'Rings'], [.6, 'Loops']];
+  const PHASES = [[0, 'Beams'], [.32, 'Swirl'], [.68, 'Burst']];
 
   const ptr = { x: 0, y: 0, on: false };
   stage.addEventListener('pointermove', e => { const r = stage.getBoundingClientRect();
     ptr.x = e.clientX - r.left; ptr.y = e.clientY - r.top; ptr.on = true; });
   stage.addEventListener('pointerleave', () => ptr.on = false);
 
+  const rand = n => { const v = Math.sin(n * 12.9898) * 43758.5453; return v - Math.floor(v); };   // a fixed "random" 0..1
+
+  // a line of light, the way a laser or a torch in a long exposure looks: a thin white-hot core inside a colored halo
+  const light = (pts, color, a) => {
+    if (a <= 0 || pts.length < 2) return;
+    ctx.beginPath(); for (const [x, y] of pts) ctx.lineTo(x, y);
+    ctx.strokeStyle = color; ctx.globalAlpha = a * .32; ctx.lineWidth = 3.5; ctx.stroke();
+    ctx.strokeStyle = C.bg; ctx.globalAlpha = a; ctx.lineWidth = 1; ctx.stroke();
+  };
+  // a glowing dot. the soft circle is drawn once per color and then stamped wherever it is needed
+  const dot = (x, y, r, color, a) => {
+    if (a <= 0) return;
+    if (!sprites[color]) { const sp = sprites[color] = document.createElement('canvas'); sp.width = sp.height = 64;
+      const g = sp.getContext('2d'), fade = g.createRadialGradient(32, 32, 0, 32, 32, 32), [cr, cg, cb] = rgb(color);
+      fade.addColorStop(0, '#fff'); fade.addColorStop(.28, `rgba(${cr},${cg},${cb},.75)`); fade.addColorStop(1, `rgba(${cr},${cg},${cb},0)`);
+      g.fillStyle = fade; g.fillRect(0, 0, 64, 64); }
+    ctx.globalAlpha = a; ctx.drawImage(sprites[color], x - r * 3, y - r * 3, r * 6, r * 6);
+  };
+
+  // the swirl is made of "pens": points of light carried along by a current, each remembering its recent path
+  const pens = Array.from({ length: PENS }, (_, i) => ({ n: i, tail: [], life: 0 }));
+  const current = (x, y, t) => {                        // which way the current flows at a point: around the focus and four slow whirlpools
+    let vx = .1, vy = -.03;
+    const pool = (px, py, k) => { const dx = x - px, dy = y - py, d = dx * dx + dy * dy + 5000;
+      vx += (-dy * k + dx * .1) / d * 190; vy += (dx * k + dy * .1) / d * 190; };
+    pool(focus.x, focus.y, 1.6);
+    for (let k = 0; k < 4; k++) pool(W * (.5 + .36 * Math.cos(k * 1.57 + t * .07)), H * (.5 + .34 * Math.sin(k * 1.57 + t * .07)), k % 2 ? 1 : -1);
+    const m = Math.hypot(vx, vy) || 1; return [vx / m, vy / m];
+  };
+  const movePens = (dt, t, speed) => pens.forEach(pen => {
+    if (!pen.tail.length || pen.life < 0 || pen.x < -60 || pen.x > W + 60 || pen.y < -60 || pen.y > H + 60) {   // start a fresh trail somewhere new
+      pen.n += PENS; pen.x = W * rand(pen.n); pen.y = H * rand(pen.n + .5); pen.life = 3 + rand(pen.n + .3) * 5; pen.tail = []; }
+    const [vx, vy] = current(pen.x, pen.y, t);
+    pen.x += vx * speed * dt; pen.y += vy * speed * dt; pen.life -= dt;
+    pen.tail.push([pen.x, pen.y]); if (pen.tail.length > 80) pen.tail.shift();
+  });
+  const sparks = Array.from({ length: SPARKS }, (_, i) => ({ n: i, born: -99, life: 0 }));
+
   function draw(p, t) {
-    const T = t / LOOP * Math.PI * 2;                   // whole-number multiples of T repeat cleanly
-    // timing: how strongly each kind of line shows at this point in the scroll. they overlap, so presets blend
-    const strands = lerp(1, .3, seg(p, .3, .55));
-    const rings = seg(p, .2, .45) * lerp(1, .35, seg(p, .7, .9));
-    const loops = seg(p, .55, .85);
-    const beat = Math.pow(.5 + .5 * Math.sin(T * 12), 4);   // a pulse every two seconds, standing in for the music
+    const dt = clamp(t - last, 0, .05); last = t;       // seconds since the last frame
+    // timing: which preset shows at this point in the scroll. each is fully on for a stretch, with a short blend between
+    const beams = 1 - seg(p, .25, .4);
+    const swirl = seg(p, .25, .4) * (1 - seg(p, .6, .75));
+    const burst = seg(p, .6, .75);
+    const beat = Math.pow(.5 + .5 * Math.sin(t * 3.14), 4);   // a pulse every two seconds, standing in for the music
 
     // the focus follows the pointer, or wanders slowly on its own
     const away = !ptr.on || reduce;
-    focus.x += ((away ? W * (.5 + .12 * Math.sin(T * 2)) : ptr.x) - focus.x) * .06;
-    focus.y += ((away ? H * (.5 + .1 * Math.sin(T * 3)) : ptr.y) - focus.y) * .06;
+    focus.x += ((away ? W * (.5 + .12 * Math.sin(t * .5)) : ptr.x) - focus.x) * .08;
+    focus.y += ((away ? H * (.5 + .1 * Math.sin(t * .8)) : ptr.y) - focus.y) * .08;
+    const fx = focus.x, fy = focus.y;
 
-    // the trail: instead of wiping the last frame, paint over it thinly so it fades out over several frames
+    // the smear: instead of wiping the last frame, paint over it thinly so it fades out over several frames
     ctx.globalCompositeOperation = 'source-over';
     ctx.globalAlpha = fresh || reduce ? 1 : TRAIL; fresh = false;
     ctx.fillStyle = C.dark; ctx.fillRect(0, 0, W, H);
-    ctx.globalCompositeOperation = 'lighter';           // where lines cross they add up and glow
-    ctx.lineWidth = 1;
-    const ink = [C.accent, C['accent-2'], C.surface, mix(C.ink, C.surface, .5)];
+    ctx.globalCompositeOperation = 'lighter';           // where lights cross they add up and get brighter
+    ctx.lineCap = 'round';
 
-    // strands: long wavy lines across the screen, pinched together where they pass the focus
-    for (let i = 0; i < STRANDS; i++) {
-      ctx.strokeStyle = ink[i % ink.length]; ctx.globalAlpha = .55 * strands; ctx.beginPath();
-      for (let x = -20; x <= W + 20; x += 8) {
-        const home = H * (.5 + (i / (STRANDS - 1) - .5) * 1.1)
-          + H * .06 * Math.sin(x * .004 * (1 + i % 3 * .3) + T * (2 + i % 4) + i * 1.7)
-          + H * .02 * beat * Math.sin(x * .02 + i + T * 24);
-        const pull = Math.exp(-Math.pow((x - focus.x) / (W * .16), 2)) * .85;
-        ctx.lineTo(x, lerp(home, focus.y + (home - focus.y) * .12, pull));
+    // preset 1, beams: straight laser lines that all pass through the focus and slowly sweep around it
+    if (beams > 0) {
+      const far = W + H;
+      for (let r = 0; r < BEAMS; r++) {
+        const turn = r / BEAMS * Math.PI + .5 * Math.sin(t * .13 * (1 + r % 3) + r * 2.1) + t * .03;
+        const color = r % 3 === 2 ? C.surface : r % 2 ? C['accent-2'] : C.accent;
+        for (let j = -2; j <= 2; j++) {                 // each beam is five lines that spread apart on the beat
+          const a = turn + j * .012 * (1 + 2 * beat), c = Math.cos(a), s = Math.sin(a);
+          light([[fx - c * far, fy - s * far], [fx + c * far, fy + s * far]], color, beams * (j ? .45 : .9));
+        }
+        if (r % 3 === 1) {                              // beads of light sliding out along some beams
+          ctx.strokeStyle = C.surface; ctx.lineWidth = 1.2; ctx.globalAlpha = .8 * beams;
+          for (let k = 0; k < 14; k++) { const d = ((k * 60 + t * 90) % 840 + 40) * (k % 2 ? -1 : 1);
+            ctx.beginPath(); ctx.arc(fx + Math.cos(turn + .05) * d, fy + Math.sin(turn + .05) * d, 2 + Math.abs(d) * .006, 0, 7); ctx.stroke(); }
+        }
       }
-      ctx.stroke();
+      for (let k = 0; k < 2; k++) {                     // two jittery lines, like a sound wave, that jump on the beat
+        const pts = [], shake = 8 + 40 * beat;
+        for (let x = -10; x <= W + 10; x += 6) pts.push([x, fy + (x - fx) * (k ? .16 : -.1)
+          + (rand(x * .37 + Math.floor(t * 24) * 7.1 + k) - .5) * shake * Math.min(1, Math.abs(x - fx) / 140)]);
+        light(pts, C.surface, .6 * beams);
+      }
+      dot(fx, fy, 10, C.accent, beams);
     }
 
-    // rings: circles that grow out from the focus one after another, fading as they go
-    const reach = Math.hypot(W, H) * .5 * (1 + .12 * Math.sin(T * 4));
-    for (let j = 0; j < RINGS; j++) {
-      const out = (j / RINGS + t / LOOP * 3) % 1, r = out * reach;
-      ctx.strokeStyle = ink[j % ink.length]; ctx.globalAlpha = .7 * rings * (1 - out); ctx.beginPath();
-      for (let n = 0; n <= 96; n++) { const a = n / 96 * Math.PI * 2, wobble = r * (1 + .05 * beat * Math.sin(a * 6 + j));
-        ctx.lineTo(focus.x + Math.cos(a) * wobble, focus.y + Math.sin(a) * wobble); }
-      ctx.stroke();
+    // preset 2, swirl: every pen leaves a bright trail, like a torch waved in front of an open camera
+    if (swirl > 0) {
+      if (reduce && !warm) { warm = true; for (let k = 0; k < 140; k++) movePens(1 / 60, t, 260); }   // a still frame needs trails already drawn
+      else movePens(dt, t, 260 * (1 + .8 * beat));
+      pens.forEach((pen, i) => {
+        const color = i % 5 === 0 ? C['accent-2'] : i % 2 ? C.surface : mix(C.ink, C.surface, .5), n = pen.tail.length;
+        light(pen.tail, color, swirl * .18);            // the whole trail, faint...
+        light(pen.tail.slice(n >> 1), color, swirl * .4);          // ...the newer half, brighter...
+        light(pen.tail.slice(n - (n >> 2)), color, swirl);         // ...and the newest quarter, brightest
+        dot(pen.x, pen.y, 2.5, color, swirl);
+      });
     }
 
-    // loops: figure-eights drawn in dots, turning around the focus
-    for (let k = 0; k < LOOPS; k++) {
-      const R = Math.min(W, H) * (.24 + .11 * k), turn = k * 1.1 + T * (k % 2 ? -1 : 1), c = Math.cos(turn), s = Math.sin(turn);
-      ctx.fillStyle = ink[k % ink.length]; ctx.globalAlpha = .9 * loops;
-      for (let n = 0; n < 150; n++) {
-        const a = n / 150 * Math.PI * 2 + T * 3, squeeze = 1 + Math.sin(a) * Math.sin(a);
-        const x = R * Math.cos(a) / squeeze, y = R * Math.sin(a) * Math.cos(a) / squeeze;
-        ctx.fillRect(focus.x + x * c - y * s - 1, focus.y + x * s + y * c - 1, 2, 2);
-      }
+    // preset 3, burst: sparks thrown out from the focus, each a short streak with a glowing dot at its head
+    if (burst > 0) {
+      sparks.forEach(sp => {
+        let age = t - sp.born;
+        if (age > sp.life) {                            // spent: throw it again from wherever the focus is now
+          sp.n += SPARKS; const first = sp.born < 0;
+          sp.life = 1.2 + rand(sp.n) * 2.4; sp.born = t - (first ? rand(sp.n + .1) * sp.life : 0); age = t - sp.born;
+          sp.a = rand(sp.n + .2) * Math.PI * 2; sp.speed = (60 + Math.pow(rand(sp.n + .3), 2) * 380) * (1 + beat);
+          sp.bend = (rand(sp.n + .4) - .5) * .004; sp.r = 1.2 + Math.pow(rand(sp.n + .5), 3) * 7; sp.x = fx; sp.y = fy;
+          sp.color = rand(sp.n + .6) < .12 ? C.accent : rand(sp.n + .7) < .5 ? C.surface : mix(C.ink, C.surface, .5);
+        }
+        const at = d => [sp.x + Math.cos(sp.a + sp.bend * d) * d, sp.y + Math.sin(sp.a + sp.bend * d) * d];
+        const out = sp.speed * age * (1 - age / sp.life * .35), back = Math.max(0, out - 40 - sp.speed * .12), fade = 1 - age / sp.life;
+        light([at(back), at((back + out) / 2), at(out)], sp.color, burst * fade * .8);
+        dot(...at(out), sp.r, sp.color, burst * fade);
+      });
+      for (let i = 0; i < 50; i++)                      // loose dots that drift and twinkle
+        dot(W * rand(i + 900) + 30 * Math.sin(t * .2 + i), H * rand(i + 950) + 30 * Math.cos(t * .17 + i * 2),
+          1 + Math.pow(rand(i + 970), 3) * 6, i % 7 ? C.surface : C.accent, burst * (.2 + .4 * (.5 + .5 * Math.sin(t * 1.3 + i * 7))));
+      dot(fx, fy, 18 * (1 + beat), C.bg, burst);
+      // a dark sphere drifting in front of it all
+      const sx = W * (.5 + .3 * Math.sin(t * .11)), sy = H * (.4 + .2 * Math.cos(t * .14)), sr = Math.min(W, H) * .11;
+      ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = burst;
+      ctx.fillStyle = C.dark; ctx.beginPath(); ctx.arc(sx, sy, sr, 0, 7); ctx.fill();
+      ctx.strokeStyle = C.surface; ctx.globalAlpha = .5 * burst; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(sx, sy, sr, 2.2, 4.6); ctx.stroke();
     }
     ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
   }

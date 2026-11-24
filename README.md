@@ -106,7 +106,7 @@ One thing drifts around a dark screen, bouncing off the edges and changing color
 
 `Scroll` `Pointer`
 
-Thin lines drift across a dark screen and leave a fading trail. Scrolling changes the pattern, the way an old music visualizer changed presets: long strands, then rings breathing in and out, then dotted loops. Everything gathers around your pointer. A built-in pulse every two seconds stands in for the music; it does not listen to sound.
+Three presets, like an old music visualizer, each drawn in thin bright lines on a dark screen. **Beams:** straight laser lines that all cross at one point and slowly sweep around it. **Swirl:** points of light carried along a current, leaving trails like a torch waved in a long exposure. **Burst:** sparks thrown outward, each a short streak with a glowing dot, and a dark sphere drifting in front. Scrolling switches between them, and all three gather around your pointer. A built-in pulse every two seconds stands in for the music; it does not listen to sound.
 
 | Neutral | hijinx theme (default) |
 | --- | --- |
@@ -135,7 +135,7 @@ Every study ships with two themes. **hijinx**, the palette and type from [hijinx
 
 ## How they work
 
-The two card studies draw an image once and slice it into pieces, then move the pieces with 3D CSS transforms. When the pieces sit flat, the seams disappear and it reads as one picture. Scroll position drives everything, so scrolling back up plays it in reverse. Depth comes from flat shades and hard offset shadows, not gradients or blur. Line visualizer is the one exception: it leaves trails by fading each frame instead of wiping it.
+The two card studies draw an image once and slice it into pieces, then move the pieces with 3D CSS transforms. When the pieces sit flat, the seams disappear and it reads as one picture. Scroll position drives everything, so scrolling back up plays it in reverse. Depth comes from flat shades and hard offset shadows, not gradients or blur. Line visualizer is the one exception: it glows. Each frame fades the last instead of wiping it, lines brighten where they cross, and its dots are soft.
 
 The four canvas studies redraw every frame from two numbers: scroll progress (0 to 1) and the time in seconds. Scroll decides the big change and time adds the drift, so each one is still alive when you stop scrolling. Stripe swell and ribbon twist fill shapes between curves. Type cascade and fluid blobs are drawn pixel by pixel on a small canvas that is stretched to fit: every word or circle spreads into the pixels around it, the way a blur would, and then each pixel is made either solid or clear. Where two spreads overlap they add up, which is why shapes reach for each other and merge. Those two also react to the pointer.
 
