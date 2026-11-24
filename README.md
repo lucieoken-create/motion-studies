@@ -90,6 +90,30 @@ A spreadsheet where nothing ever moves. Only the fill color of each cell changes
 
 [Open it live](https://lucieoken-create.github.io/motion-studies/cell-fill/) · [Code](cell-fill/index.html)
 
+### 08 · Corner bounce
+
+`Pointer`
+
+One thing drifts around a dark screen, bouncing off the edges and changing color each time. Swipe across it and it veers off course, then settles back to its usual pace. A counter keeps track of bounces and of the rare times it lands exactly in a corner. Choose what bounces: the theme's icon, a word, your own word, or your own image. No scroll.
+
+| Neutral | hijinx theme (default) |
+| --- | --- |
+| ![Corner bounce, neutral theme](previews/corner-bounce-neutral.gif) | ![Corner bounce, hijinx theme](previews/corner-bounce-hijinx.gif) |
+
+[Open it live](https://lucieoken-create.github.io/motion-studies/corner-bounce/) · [Code](corner-bounce/index.html)
+
+### 09 · Line visualizer
+
+`Scroll` `Pointer`
+
+Thin lines drift across a dark screen and leave a fading trail. Scrolling changes the pattern, the way an old music visualizer changed presets: long strands, then rings breathing in and out, then dotted loops. Everything gathers around your pointer. A built-in pulse every two seconds stands in for the music; it does not listen to sound.
+
+| Neutral | hijinx theme (default) |
+| --- | --- |
+| ![Line visualizer, neutral theme](previews/line-visualizer-neutral.gif) | ![Line visualizer, hijinx theme](previews/line-visualizer-hijinx.gif) |
+
+[Open it live](https://lucieoken-create.github.io/motion-studies/line-visualizer/) · [Code](line-visualizer/index.html)
+
 ## Use one in your project
 
 1. Copy the study's `index.html` (and any image it points to in `assets/`).
@@ -97,7 +121,7 @@ A spreadsheet where nothing ever moves. Only the fill color of each cell changes
 3. Swap the content. The unfold's card face lives in the `<template>` near the bottom of the page; the flip's picture is the `PHOTOS` list at the top of its script, one per theme.
 4. Retime it. Each script has a short "timing" block where every step is a slice of scroll progress from 0 to 1. The section's `height` (420vh) sets how much scrolling the whole thing takes.
 
-Studies 03 to 07 are drawn on a canvas, so there's no markup to swap. Their content is a few constants at the top of the script: the number of stripes or bands, the word in the swirl (`WORDS`, one per theme), how many circles there are, and `LOOP`, the number of seconds before the motion repeats exactly. Their colors still come from the same theme variables.
+Studies 03 to 07 and 09 are drawn on a canvas, so there's no markup to swap. Their content is a few constants at the top of the script: the number of stripes or bands, the word in the swirl (`WORDS`, one per theme), how many circles there are, and `LOOP`, the number of seconds before the motion repeats exactly. Their colors still come from the same theme variables.
 
 Every study respects reduced motion: people who've turned animation off in their settings see the finished state, still.
 
@@ -111,13 +135,17 @@ Every study ships with two themes. **hijinx**, the palette and type from [hijinx
 
 ## How they work
 
-The two card studies draw an image once and slice it into pieces, then move the pieces with 3D CSS transforms. When the pieces sit flat, the seams disappear and it reads as one picture. Scroll position drives everything, so scrolling back up plays it in reverse. Depth comes from flat shades and hard offset shadows, not gradients or blur.
+The two card studies draw an image once and slice it into pieces, then move the pieces with 3D CSS transforms. When the pieces sit flat, the seams disappear and it reads as one picture. Scroll position drives everything, so scrolling back up plays it in reverse. Depth comes from flat shades and hard offset shadows, not gradients or blur. Line visualizer is the one exception: it leaves trails by fading each frame instead of wiping it.
 
 The four canvas studies redraw every frame from two numbers: scroll progress (0 to 1) and the time in seconds. Scroll decides the big change and time adds the drift, so each one is still alive when you stop scrolling. Stripe swell and ribbon twist fill shapes between curves. Type cascade and fluid blobs are drawn pixel by pixel on a small canvas that is stretched to fit: every word or circle spreads into the pixels around it, the way a blur would, and then each pixel is made either solid or clear. Where two spreads overlap they add up, which is why shapes reach for each other and merge. Those two also react to the pointer.
 
 Cell fill works differently: it asks one question for every cell, "what color are you right now?", and each scene is a different answer based on how far the cell is from the special one. It only repaints when something changes, eight times a second.
 
+Corner bounce is the simplest of all: one ordinary page element with a position and a speed, turned around whenever it reaches an edge.
+
 ## Credits
+
+Corner bounce (08) is a take on the bouncing DVD logo screensaver, and line visualizer (09) on the classic iTunes visualizer. Both are built from scratch.
 
 Cell fill (07) was inspired by Spotify's [Spreadbeats](https://ads.spotify.com/spreadbeats), a music video made inside a spreadsheet by FCB New York with music by John Summit. The study borrows the idea of animating with cell fills and is otherwise built from scratch.
 

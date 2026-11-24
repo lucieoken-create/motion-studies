@@ -99,7 +99,7 @@
 (() => {
   const root = document.documentElement;
   const section = document.getElementById('study'), stage = document.getElementById('stage');
-  const canvas = document.getElementById('canvas'), ctx = canvas.getContext('2d');
+  const canvas = document.getElementById('canvas'), ctx = canvas && canvas.getContext('2d');
   const bar = document.getElementById('bar'), phase = document.getElementById('phase');
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 

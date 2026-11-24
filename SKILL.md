@@ -1,6 +1,6 @@
 ---
 name: motion-studies
-description: Add a scroll-driven motion study (card unfold, card flip, stripe swell, type cascade, fluid blobs, ribbon twist, cell fill) to a web page and restyle it to the project's brand. Use when someone asks for one of these animations by name, wants a scroll animation that reveals an image or card, or wants a moving hero background.
+description: Add a scroll-driven motion study (card unfold, card flip, stripe swell, type cascade, fluid blobs, ribbon twist, cell fill, corner bounce, line visualizer) to a web page and restyle it to the project's brand. Use when someone asks for one of these animations by name, wants a scroll animation that reveals an image or card, or wants a moving hero background.
 ---
 
 # motion-studies
@@ -16,8 +16,10 @@ Each study in this repo is one self-contained HTML file: a sticky stage inside a
 | Fluid blobs | `fluid-blobs/index.html` | Drifting circles melt together into thick blobs with blended colors; the pointer is a circle too |
 | Ribbon twist | `ribbon-twist/index.html` | A ribbon of color bands glides down the page, then turns over |
 | Cell fill | `cell-fill/index.html` | A fixed spreadsheet grid animates through cell colors alone; one cell follows the pointer |
+| Corner bounce | `corner-bounce/index.html` | An icon, word or image bounces around the stage, changing color at each edge; swiping nudges it |
+| Line visualizer | `line-visualizer/index.html` | Thin lines with trails form strands, rings and loops; scroll switches pattern, the pointer is the focus |
 
-The two card studies move DOM elements with CSS transforms and only change when the page scrolls. The other five draw on a `<canvas>`: `draw(p, t)` takes scroll progress `p` (0 to 1) and the time `t` in seconds, so they keep drifting between scrolls. Type cascade and cell fill ignore `p`: their sections are one screen tall, and they only play and react to the pointer.
+The two card studies move DOM elements with CSS transforms and only change when the page scrolls. The other five draw on a `<canvas>`: `draw(p, t)` takes scroll progress `p` (0 to 1) and the time `t` in seconds, so they keep drifting between scrolls. Type cascade, cell fill and corner bounce ignore `p`: their sections are one screen tall, and they only play and react to the pointer.
 
 ## Adding a study to a project
 
