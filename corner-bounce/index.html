@@ -62,7 +62,10 @@
   .score { position: absolute; left: 32px; bottom: 32px; color: var(--bg); }
   /* the thing that bounces. its color is set from the script, and every version below is drawn in that color */
   .puck { position: absolute; left: 0; top: 0; color: var(--accent); cursor: grab; touch-action: none; will-change: transform; }
-  .puck > * { display: none; }
+  .stage .puck > * { display: none; }
+  /* the trail: fainter copies that follow behind. hidden until the Trail button turns them on */
+  .ghost { pointer-events: none; }
+  .stage:not(.trailing) .ghost { display: none; }
   .icon, .own, .stage canvas.icon { position: static; width: var(--size); height: var(--size); }
   .badge { background: currentColor; padding: .3em .55em .36em; font: 500 clamp(44px, 9vw, 112px)/1 var(--font-display); letter-spacing: -.025em; white-space: nowrap; box-shadow: 8px 8px 0 var(--ink); }
   .badge span { color: var(--dark); }
@@ -84,13 +87,14 @@
     <section class="intro">
       <div class="meta"><span class="eyebrow">Motion study · corner bounce</span><span class="tag pointer">Pointer</span></div>
       <h1>Will it hit the corner?</h1>
-      <p class="lead">One thing drifts around the screen, bouncing off the edges and changing color each time. Swipe across it and it veers off course, then settles back to its usual pace. Every so often it lands exactly in a corner.</p>
+      <p class="lead">One thing drifts around the screen, bouncing off the edges and changing color each time. Swipe across it and it veers off course, then settles back to its usual pace. Every so often it lands exactly in a corner. Turn on Trail to have copies follow behind it.</p>
       <div class="picks">
         <span>Bounce</span>
         <button class="pick" data-kind="icon" aria-pressed="true">Icon</button>
         <button class="pick" data-kind="word" aria-pressed="false">Word</button>
         <input type="text" id="word" maxlength="14" placeholder="your own word" aria-label="Your own word" autocomplete="off" spellcheck="false">
         <label class="swap"><input type="file" accept="image/*" id="ownFile">Your own image ↑</label>
+        <button class="pick" id="trailBtn" aria-pressed="false">Trail</button>
       </div>
     </section>
   </div>
@@ -154,21 +158,20 @@
   // no canvas here: the bouncing thing is an ordinary page element, moved with a transform
   const puck = document.getElementById('puck'), badge = document.getElementById('badge');
   const own = document.getElementById('own'), score = document.getElementById('score');
-  let W, H, big, painted = '';
+  let W, H, big;
   const size = () => { W = stage.clientWidth; H = stage.clientHeight;
-    big = Math.round(clamp(Math.min(W, H) * .32, 110, 260)); puck.style.setProperty('--size', big + 'px'); painted = ''; };
+    big = Math.round(clamp(Math.min(W, H) * .32, 110, 260)); stage.style.setProperty('--size', big + 'px'); };
 
   // the hijinx icon is a picture with a see-through background. it is drawn onto a small canvas and then
   // flooded with one color, which keeps the picture's shape, so it can change color like everything else.
-  const ball = document.getElementById('ball'), art = new Image();
-  art.src = '../assets/disco-ball-ascii.webp'; art.onload = () => painted = '';
-  const paint = color => {
-    if (!art.naturalWidth || painted === color) return;
-    const d = Math.min(devicePixelRatio || 1, 2), n = ball.width = ball.height = big * d, g = ball.getContext('2d');
-    const fit = Math.min(n / art.naturalWidth, n / art.naturalHeight), w = art.naturalWidth * fit, h = art.naturalHeight * fit;
+  const art = new Image(); art.src = '../assets/disco-ball-ascii.webp';
+  const paint = (ball, color) => {
+    const d = Math.min(devicePixelRatio || 1, 2), n = big * d;
+    if (!ball || !art.naturalWidth || ball.dataset.painted === color + n) return;   // already this color and size
+    ball.width = ball.height = n; ball.dataset.painted = color + n;
+    const g = ball.getContext('2d'), fit = Math.min(n / art.naturalWidth, n / art.naturalHeight), w = art.naturalWidth * fit, h = art.naturalHeight * fit;
     g.drawImage(art, (n - w) / 2, (n - h) / 2, w, h);
     g.globalCompositeOperation = 'source-in'; g.fillStyle = color; g.fillRect(0, 0, n, n);
-    painted = color;
   };
 
   const WORDS = { neutral: 'motion', hijinx: 'hijinx' };   // the word on the badge, one per theme
@@ -180,13 +183,25 @@
   // what is bouncing: the theme's icon, a word, or a picture you pick
   let userWord = '';
   const label = () => badge.textContent = userWord || WORDS[root.dataset.theme] || WORDS.neutral;
-  const show = kind => { puck.dataset.kind = kind; label();
-    document.querySelectorAll('.pick').forEach(b => b.setAttribute('aria-pressed', b.dataset.kind === kind)); };
-  document.querySelectorAll('.pick').forEach(b => b.addEventListener('click', () => show(b.dataset.kind)));
+  const show = kind => { puck.dataset.kind = kind; label(); copy();
+    document.querySelectorAll('.pick[data-kind]').forEach(b => b.setAttribute('aria-pressed', b.dataset.kind === kind)); };
+  document.querySelectorAll('.pick[data-kind]').forEach(b => b.addEventListener('click', () => show(b.dataset.kind)));
   document.getElementById('word').addEventListener('input', e => { userWord = e.target.value.trim(); show('word'); });
   document.getElementById('ownFile').addEventListener('change', e => { const f = e.target.files && e.target.files[0];
     if (f) { own.src = URL.createObjectURL(f); show('image'); } });
-  document.addEventListener('themechange', label); label();
+  document.addEventListener('themechange', () => { label(); copy(); });
+
+  // the trail: copies of the bouncing thing, each placed where the leader was a moment earlier and each fainter
+  const GHOSTS = 6;                              // how many copies follow behind
+  const LAG = .22;                               // seconds between one copy and the next
+  const trail = [], past = [];                   // the copies, and a short record of where the leader has been
+  for (let k = 0; k < GHOSTS; k++) { const g = document.createElement('div'); g.className = 'puck ghost';
+    g.style.opacity = .6 * (1 - k / GHOSTS); stage.insertBefore(g, puck); trail.push(g); }
+  const copy = () => trail.forEach(g => { g.innerHTML = puck.innerHTML; g.dataset.kind = puck.dataset.kind;
+    g.querySelectorAll('[id]').forEach(n => n.removeAttribute('id')); });
+  const trailBtn = document.getElementById('trailBtn');
+  trailBtn.addEventListener('click', () => trailBtn.setAttribute('aria-pressed', stage.classList.toggle('trailing')));
+  label(); copy();
 
   // where it is, how fast it is going, and the running totals
   const s = { x: 60, y: 40, vx: SPEED * .74, vy: SPEED * .67, color: 0, bounces: 0, corners: 0, flash: -9, last: 0 };
@@ -228,8 +243,18 @@
         if (nearSide && nearEnd && t - s.flash > 1) { s.corners++; s.flash = t; }   // touching two walls at once: a corner
       }
     }
+    const color = colors()[s.color];
     puck.style.transform = `translate3d(${s.x}px, ${s.y}px, 0)`;
-    puck.style.color = colors()[s.color]; paint(colors()[s.color]);
+    puck.style.color = color; paint(document.getElementById('ball'), color);
+
+    // remember where it was, then put each copy where the leader was LAG seconds before the copy ahead of it
+    past.push({ t, x: s.x, y: s.y, color });
+    while (past.length && past[0].t < t - GHOSTS * LAG - .5) past.shift();
+    if (stage.classList.contains('trailing')) trail.forEach((g, k) => {
+      let was = past[0]; for (const e of past) { if (e.t > t - (k + 1) * LAG) break; was = e; }
+      g.style.transform = `translate3d(${was.x}px, ${was.y}px, 0)`;
+      g.style.color = was.color; paint(g.querySelector('canvas'), was.color);
+    });
     stage.classList.toggle('flash', t - s.flash < .35);
     score.textContent = `Corners ${s.corners} · Bounces ${s.bounces}`;
   }

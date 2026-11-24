@@ -94,7 +94,7 @@ A spreadsheet where nothing ever moves. Only the fill color of each cell changes
 
 `Pointer`
 
-One thing drifts around a dark screen, bouncing off the edges and changing color each time. Swipe across it and it veers off course, then settles back to its usual pace. A counter keeps track of bounces and of the rare times it lands exactly in a corner. Choose what bounces: the theme's icon, a word, your own word, or your own image. No scroll.
+One thing drifts around a dark screen, bouncing off the edges and changing color each time. Swipe across it and it veers off course, then settles back to its usual pace. A counter keeps track of bounces and of the rare times it lands exactly in a corner. Choose what bounces: the theme's icon, a word, your own word, or your own image. Turn on Trail and six fainter copies follow behind it. No scroll.
 
 | Neutral | hijinx theme (default) |
 | --- | --- |
