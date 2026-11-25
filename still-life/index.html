@@ -43,7 +43,14 @@
   .picks { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; font: 400 12px/1 var(--font-mono); letter-spacing: .1em; text-transform: uppercase; }
   .pick { font: inherit; letter-spacing: inherit; text-transform: inherit; color: var(--ink); background: none; border: 1px solid var(--border-strong); padding: 8px 12px; cursor: pointer; }
   .pick[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--bg); }
-  .picks .gap { width: 12px; }
+  /* a switch, for something you turn on and off, as opposed to the buttons, which choose between pictures */
+  .switch { display: inline-flex; align-items: center; gap: 10px; font: inherit; letter-spacing: inherit; text-transform: inherit; color: var(--ink); background: none; border: 0; padding: 8px 0; margin-left: 16px; cursor: pointer; }
+  .switch i { position: relative; width: 30px; height: 16px; border: 1px solid var(--border-strong); }
+  .switch i::after { content: ""; position: absolute; top: 2px; left: 2px; width: 10px; height: 10px; background: var(--ink); transition: transform .16s; }
+  .switch[aria-checked="true"] i { background: var(--accent); border-color: var(--ink); }
+  .switch[aria-checked="true"] i::after { transform: translateX(14px); }
+  .switch:hover i { border-color: var(--ink); }
+  @media (max-width: 760px) { .switch { margin-left: 0; flex-basis: 100%; } }   /* on a phone it sits on its own line, flush left */
 
   /* ---------- the study ---------- */
   .study { position: relative; height: 420vh; }             /* scroll length: taller = slower */
@@ -75,8 +82,7 @@
         <span>Picture</span>
         <button class="pick" data-picture="flowers" aria-pressed="true">Flowers</button>
         <button class="pick" data-picture="ship" aria-pressed="false">Ship</button>
-        <span class="gap"></span>
-        <button class="pick" id="paintBtn" aria-pressed="false">Painting colors</button>
+        <button class="switch" id="paintBtn" role="switch" aria-checked="false"><i></i>Painting colors</button>
       </div>
     </section>
   </div>
@@ -191,7 +197,7 @@
     for (const q of pieces) q.fill = painting ? '#' + q.rgb.map(v => v.toString(16).padStart(2, '0')).join('') : TINT[opts.colors](q.rgb); };
   document.addEventListener('themechange', () => { recolor(); });
   const paintBtn = document.getElementById('paintBtn');
-  paintBtn.addEventListener('click', () => { painting = !painting; paintBtn.setAttribute('aria-pressed', painting); recolor(); still(); });
+  paintBtn.addEventListener('click', () => { painting = !painting; paintBtn.setAttribute('aria-checked', painting); recolor(); still(); });
   document.querySelectorAll('.pick[data-picture]').forEach(b => b.addEventListener('click', () => {
     document.querySelectorAll('.pick[data-picture]').forEach(o => o.setAttribute('aria-pressed', o === b));
     load(b.dataset.picture); still(); }));
