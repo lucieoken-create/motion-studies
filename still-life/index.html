@@ -134,6 +134,8 @@
   const REST = 0;                                // the still frame shown when motion is turned off: the whole picture
   const PHASES = [[0, 'Whole'], [.05, 'Parting'], [.4, 'Opening'], [.92, 'Scattered']];
   const LINE = 2.4;                              // outline thickness, in picture pixels
+  const START = 1.35;                            // how much larger than "fits the stage" the bouquet is at rest. 1 = all of it in view
+  const LEAN = .345;                             // how far the scene leans toward the pointer
 
   const rand = n => { const v = Math.sin(n * 12.9898) * 43758.5453; return v - Math.floor(v); };   // a fixed "random" 0..1
   // get each piece ready once: its outline as a reusable shape drawn around its own middle, and a few fixed random numbers
@@ -181,7 +183,8 @@
     const loose = Math.max(part * .4, open);            // how free the pieces are, for the drifting and the pointer
     ptr.k += ((ptr.on && !reduce ? 1 : 0) - ptr.k) * .08;
 
-    const fit = Math.min(H * .9 / ART.h, W * .92 / ART.w), ox = W / 2 - MID.x * fit, oy = H * .5 - ART.h / 2 * fit;   // picture pixels to screen pixels
+    // picture pixels to screen pixels. it starts large and cropped, and pulls back to fit as the bouquet parts, to make room
+    const fit = Math.min(H * .9 / ART.h * lerp(START, 1, part), W * .92 / ART.w), ox = W / 2 - MID.x * fit, oy = H * .5 - lerp(MID.y, ART.h / 2, part) * fit;
     const mx = (ptr.x - ox) / fit, my = (ptr.y - oy) / fit;                                                          // the pointer, in picture pixels
     ctx.fillStyle = backdrop; ctx.fillRect(0, 0, W, H);
     ctx.strokeStyle = line; ctx.lineJoin = 'round';
@@ -200,7 +203,7 @@
       // a slow float, so it is never frozen while you read
       x += loose * 7 * Math.sin(t * .4 + q.n); y += loose * 7 * Math.cos(t * .33 + q.n * 1.7);
       // the pointer: the whole scene leans with it, nearer pieces more, and pieces right under it are nudged aside
-      x += (mx - MID.x) * (size - 1) * .3 * ptr.k; y += (my - MID.y) * (size - 1) * .3 * ptr.k;
+      x += (mx - MID.x) * (size - 1) * LEAN * ptr.k; y += (my - MID.y) * (size - 1) * LEAN * ptr.k;
       const ax = x - mx, ay = y - my, d = Math.hypot(ax, ay) || 1, push = Math.max(0, 1 - d / 150) * 46 * loose * ptr.k;
       q.px += (ax / d * push - q.px) * .12; q.py += (ay / d * push - q.py) * .12;
 
