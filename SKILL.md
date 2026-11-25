@@ -17,7 +17,7 @@ Each study in this repo is one self-contained HTML file: a sticky stage inside a
 | Ribbon twist | `ribbon-twist/index.html` | A ribbon of color bands glides down the page, then turns over |
 | Cell fill | `cell-fill/index.html` | A fixed spreadsheet grid animates through cell colors alone; one cell follows the pointer |
 | Corner bounce | `corner-bounce/index.html` | An icon, word or image bounces around the stage, changing color at each edge; swiping nudges it |
-| Still life | `still-life/index.html` (+ `pieces.js`) | A picture traced into flat outlined pieces parts flower by flower, then piece by piece; the pointer leans the scene |
+| Still life | `still-life/index.html` (+ `flowers.js`, `ship.js`) | A picture traced into flat outlined pieces parts into its subjects, then into pieces; the pointer leans the scene. Two pictures, switchable |
 | Line visualizer | `line-visualizer/index.html` | Three glowing-line presets (beams of light, swirling ribbons, a burst of sparks); scroll switches preset, the pointer is the focus |
 
 The two card studies move DOM elements with CSS transforms and only change when the page scrolls. The other five draw on a `<canvas>`: `draw(p, t)` takes scroll progress `p` (0 to 1) and the time `t` in seconds, so they keep drifting between scrolls. Type cascade, cell fill and corner bounce ignore `p`: their sections are one screen tall, and they only play and react to the pointer.
@@ -39,3 +39,16 @@ The two card studies move DOM elements with CSS transforms and only change when 
 - Text inside the card stays readable at every size the card passes through.
 - Nothing else on the page jumps when the sticky stage starts and ends.
 - Canvas studies: the drawing is sharp on a high-density screen, it stops redrawing once it's scrolled off screen, and type cascade and fluid blobs hold a smooth frame rate (raise `PX` if they don't).
+
+## Tracing a new picture for still life
+
+When someone wants their own picture in still life, trace it with `tools/trace.py` (needs `numpy`, `pillow`, `opencv-python-headless`, `scikit-image`). Run `python3 tools/trace.py --help` for every option.
+
+1. **Look at the picture first** and choose a starting point:
+   - Objects on a plain dark background: `--backdrop dark --detail 260 --smallest 140`, and `colors: 'hue'` in the study.
+   - A full scene, or soft edges and little color: the defaults (`--backdrop none --detail 120 --smallest 90 --smooth 14`), and `colors: 'tone'`.
+2. **Run it and read what it prints.** If it warns that one piece covers more than a quarter of the picture, halve `--detail` and run again. If it warns about more than 900 pieces, raise `--detail` or `--smallest`. Aim for roughly 250 to 600 pieces.
+3. **Look at the result before wiring it in.** Draw the pieces (load the output file in a page and fill each outline) and compare with the original. The subject should be recognizable from the flat shapes alone. If it is not, say so plainly: busy textures, faces, fine print and low-contrast photos do not trace well, and no setting fixes that.
+4. **Group it by hand if the picture has clear subjects.** Write a groups file like `tools/ship-groups.json`: one oval per subject, in picture pixels, most specific first, with an optional `light` range to separate a dark subject from a light background behind it. Draw the groups in different colors to check them, then pass `--groups`.
+5. **Wire it in** in `still-life/index.html`: a `<script>` tag for the new file, an entry in `PICTURES` (`start`, `mid`, `view`, `colors`, `back`), and a button with `data-picture`.
+6. **Credit the source** with `--credit`, and only use pictures the person has the right to use.

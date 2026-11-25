@@ -118,7 +118,9 @@ Three presets, like an old music visualizer, each drawn in thin bright lines on 
 
 `Scroll` `Pointer`
 
-A 17th-century painting of flowers, redrawn as 528 flat shapes with dark outlines. Scrolling parts the bouquet flower by flower, then opens each flower into its own pieces, all drifting toward you. Your pointer leans the scene and nudges nearby pieces aside. A button switches between theme colors and the painting's own.
+A 17th-century painting, redrawn as a few hundred flat shapes with dark outlines. Scrolling parts it into its main subjects, then opens each into its own pieces, all drifting toward you. Your pointer leans the scene and nudges nearby pieces aside. There are two pictures to switch between, a bouquet of flowers and a ship in a storm, and a button for the painting's own colors.
+
+To use your own picture, trace it with [`tools/trace.py`](tools/trace.py). See [Trace your own picture](#trace-your-own-picture).
 
 | Neutral | hijinx theme (default) |
 | --- | --- |
@@ -128,7 +130,7 @@ A 17th-century painting of flowers, redrawn as 528 flat shapes with dark outline
 
 ## Use one in your project
 
-1. Copy the study's `index.html` (and any image it points to in `assets/`; still life also needs its `pieces.js`).
+1. Copy the study's `index.html` (and any image it points to in `assets/`; still life also needs its picture files, `flowers.js` and `ship.js`).
 2. Restyle it by changing the variables at the top of the `<style>` block: colors, fonts and the mark on the card backs. Everything else reads from them.
 3. Swap the content. The unfold's card face lives in the `<template>` near the bottom of the page; the flip's picture is the `PHOTOS` list at the top of its script, one per theme.
 4. Retime it. Each script has a short "timing" block where every step is a slice of scroll progress from 0 to 1. The section's `height` (420vh) sets how much scrolling the whole thing takes.
@@ -136,6 +138,29 @@ A 17th-century painting of flowers, redrawn as 528 flat shapes with dark outline
 Studies 03 to 07 and 09 are drawn on a canvas, so there's no markup to swap. Their content is a few constants at the top of the script: the number of stripes or bands, the word in the swirl (`WORDS`, one per theme), how many circles there are, and `LOOP`, the number of seconds before the motion repeats exactly. Their colors still come from the same theme variables.
 
 Every study respects reduced motion: people who've turned animation off in their settings see the finished state, still.
+
+## Trace your own picture
+
+Still life can show any picture that has been traced into pieces. The tracer is a small Python script, the only part of this repo that is not plain HTML, and you only need it to make a new picture.
+
+```bash
+pip install numpy pillow opencv-python-headless scikit-image
+```
+
+```bash
+python3 tools/trace.py photo.jpg still-life/mine.js --name mine
+```
+
+Then, in `still-life/index.html`: load `mine.js` next to the other two picture files, add a `mine` entry to `PICTURES`, and add a button with `data-picture="mine"`.
+
+What works well, from the two pictures here:
+
+- **Objects on a plain dark background** (the flowers): add `--backdrop dark --detail 260 --smallest 140` to cut the subject out and leave the background empty. Use `colors: 'hue'`.
+- **A full scene with soft edges** (the ship): the defaults trace the whole frame at finer detail. Use `colors: 'tone'`, which colors by light and dark.
+- The script prints a warning if one piece covers more than a quarter of the picture (too coarse: halve `--detail`) or if there are more than 900 pieces (too slow: raise it).
+- Pictures with clear shapes and distinct colors trace best. Busy textures, faces and fine print do not.
+
+To make parts of the picture break away as units, pass `--groups` a small JSON file of ovals. [`tools/ship-groups.json`](tools/ship-groups.json) is the one used for the ship. The flowers file was made with an earlier version of this script plus one manual crop, so tracing that painting again will come out close but not identical.
 
 ## Themes
 
@@ -153,13 +178,13 @@ The four canvas studies redraw every frame from two numbers: scroll progress (0 
 
 Cell fill works differently: it asks one question for every cell, "what color are you right now?", and each scene is a different answer based on how far the cell is from the special one. It only repaints when something changes, eight times a second.
 
-Still life keeps its picture in a separate file, `pieces.js`: each piece is an outline, a color and the flower it belongs to. Every frame, each piece is moved away from the middle of its flower, and each flower away from the middle of the bouquet, by amounts that grow with scroll.
+Still life keeps each picture in its own file (`flowers.js`, `ship.js`): each piece is an outline, a color and the group it belongs to, such as one flower or the ship. Every frame, each piece is moved away from the middle of its group, and each group away from the middle of the picture, by amounts that grow with scroll.
 
 Corner bounce is the simplest of all: one ordinary page element with a position and a speed, turned around whenever it reaches an edge.
 
 ## Credits
 
-Still life (10) is traced from Jan Davidsz. de Heem's *Still Life with Flowers in a Glass Vase* in the Rijksmuseum, a 17th-century painting in the public domain.
+Still life (10) is traced from two 17th-century paintings in the Rijksmuseum, both in the public domain: Jan Davidsz. de Heem's *Still Life with Flowers in a Glass Vase*, and Willem van de Velde the Younger's *A Ship on the High Seas Caught by a Squall*, known as *The Gust*.
 
 Corner bounce (08) is a take on the bouncing DVD logo screensaver, and line visualizer (09) on the classic iTunes visualizer. Both are built from scratch.
 
