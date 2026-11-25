@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="hijinx">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Corner bounce · motion-studies</title>
+<style>
+  /* ---------- themes: change these variables to restyle the study ---------- */
+  :root, [data-theme="neutral"] {
+    --bg: #F4F4F1; --ink: #18181B; --surface: #E2E2DD; --accent: #CFCFC8; --accent-2: #E9E9E4;
+    --muted: #5F5F66; --dark: #111113; --border: rgba(24,24,27,.14); --border-strong: rgba(24,24,27,.3);
+    --font-display: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    --font-body: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  [data-theme="hijinx"] {
+    --bg: #F7F8F6; --ink: #52489C; --surface: #D4DCEF; --accent: #E5E460; --accent-2: #F8E49B;
+    --muted: #625C94; --dark: #242038; --border: rgba(82,72,156,.18); --border-strong: rgba(82,72,156,.35);
+    --font-display: "Bricolage Grotesque", system-ui, sans-serif;
+    --font-body: "IBM Plex Sans", system-ui, sans-serif;
+    --font-mono: "Space Mono", ui-monospace, monospace;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--font-body); -webkit-font-smoothing: antialiased; }
+  .wrap { max-width: 1200px; margin: 0 auto; padding: 0 32px; }
+  .label { font: 400 11px/1.4 var(--font-mono); letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+  .top { display: flex; justify-content: space-between; align-items: center; padding: 24px 0; border-bottom: 1px solid var(--border); }
+  .top a { color: var(--ink); text-decoration: none; }
+  .theme-btn { font: 400 11px/1 var(--font-mono); letter-spacing: .14em; text-transform: uppercase; color: var(--ink); background: none; border: 1px solid var(--border-strong); padding: 8px 12px; cursor: pointer; }
+  .theme-btn:hover { border-color: var(--ink); }
+
+  .intro { padding: 128px 0 96px; display: grid; gap: 24px; max-width: 760px; }
+  .eyebrow { font: 400 12px/1.4 var(--font-mono); letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+  h1 { font: 500 clamp(44px, 6vw, 80px)/1.02 var(--font-display); letter-spacing: -.025em; margin: 0; text-wrap: balance; }
+  .lead { font-size: 21px; line-height: 1.55; margin: 0; max-width: 58ch; }
+  .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+  /* square tags that say what drives the motion */
+  .tag { font: 400 10px/1 var(--font-mono); letter-spacing: .14em; text-transform: uppercase; color: var(--ink); border: 1px solid var(--border-strong); padding: 5px 7px; white-space: nowrap; }
+  .tag.pointer { background: var(--accent); border-color: var(--accent); }
+  .picks { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; font: 400 12px/1 var(--font-mono); letter-spacing: .1em; text-transform: uppercase; }
+  .pick { font: inherit; letter-spacing: inherit; text-transform: inherit; color: var(--ink); background: none; border: 1px solid var(--border-strong); padding: 8px 12px; cursor: pointer; }
+  .pick[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--bg); }
+  .picks input[type="text"] { font: inherit; letter-spacing: inherit; text-transform: none; color: var(--ink); background: none; border: 0; border-bottom: 1px solid var(--border-strong); padding: 0 0 4px; width: 17ch; border-radius: 0; }
+  .picks input[type="text"]:focus { outline: none; border-bottom-color: var(--ink); }
+  .swap { position: relative; cursor: pointer; padding-bottom: 4px; border-bottom: 1px solid var(--border-strong); }
+  .swap:hover { border-bottom-color: var(--ink); }
+  .swap input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+
+  /* ---------- the study ---------- */
+  .study { position: relative; height: 420vh; }             /* scroll length: taller = slower */
+  .stage { position: sticky; top: 0; height: 100vh; overflow: hidden; background: var(--dark); }
+  .stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+
+  .meter { position: absolute; right: 32px; bottom: 32px; display: flex; gap: 16px; align-items: center; background: var(--bg); padding: 8px 12px; border: 1px solid var(--border-strong); }
+  .meter .bar { width: 120px; height: 1px; background: var(--border-strong); position: relative; }
+  .meter .bar i { position: absolute; left: 0; top: -1px; height: 3px; background: var(--ink); width: 0; }
+  /* this study does not use scroll: it is one screen tall and just plays */
+  .study { height: 100vh; }
+  .meter { display: none; }
+  .stage.flash { background: var(--ink); }                   /* a blink when it lands a corner */
+  .score { position: absolute; left: 32px; bottom: 32px; color: var(--bg); }
+  /* the thing that bounces. its color is set from the script, and every version below is drawn in that color */
+  .puck { position: absolute; left: 0; top: 0; color: var(--accent); cursor: grab; touch-action: none; will-change: transform; }
+  .stage .puck > * { display: none; }
+  /* the trail: fainter copies that follow behind. hidden until the Trail button turns them on */
+  .ghost { pointer-events: none; }
+  .stage:not(.trailing) .ghost { display: none; }
+  .icon, .own, .stage canvas.icon { position: static; width: var(--size); height: var(--size); }
+  .badge { background: currentColor; padding: .3em .55em .36em; font: 500 clamp(44px, 9vw, 112px)/1 var(--font-display); letter-spacing: -.025em; white-space: nowrap; box-shadow: 8px 8px 0 var(--ink); }
+  .badge span { color: var(--dark); }
+  .own { object-fit: cover; border: 4px solid currentColor; box-shadow: 8px 8px 0 var(--ink); }
+  [data-theme="hijinx"] .puck[data-kind="icon"] .icon-hijinx, [data-theme="neutral"] .puck[data-kind="icon"] .icon-neutral,
+  .puck[data-kind="word"] .badge, .puck[data-kind="image"] .own { display: block; }
+
+  .foot { display: flex; justify-content: space-between; padding: 24px 0 48px; border-top: 1px solid var(--border); margin-top: 96px; }
+  .foot a { color: inherit; text-decoration: none; border-bottom: 1px solid var(--border-strong); }
+  @media (max-width: 760px) { .wrap { padding: 0 24px; } .meter { display: none; } }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="top">
+      <a class="label" href="../">← motion-studies</a>
+      <button class="theme-btn" id="themeBtn">Theme: hijinx</button>
+    </header>
+    <section class="intro">
+      <div class="meta"><span class="eyebrow">Motion study · corner bounce</span><span class="tag pointer">Pointer</span></div>
+      <h1>Will it hit the corner?</h1>
+      <p class="lead">One thing drifts around the screen, bouncing off the edges and changing color each time. Swipe across it and it veers off course, then settles back to its usual pace. Every so often it lands exactly in a corner. Turn on Trail to have copies follow behind it.</p>
+      <div class="picks">
+        <span>Bounce</span>
+        <button class="pick" data-kind="icon" aria-pressed="true">Icon</button>
+        <button class="pick" data-kind="word" aria-pressed="false">Word</button>
+        <input type="text" id="word" maxlength="14" placeholder="your own word" aria-label="Your own word" autocomplete="off" spellcheck="false">
+        <label class="swap"><input type="file" accept="image/*" id="ownFile">Your own image ↑</label>
+        <button class="pick" id="trailBtn" aria-pressed="false">Trail</button>
+      </div>
+    </section>
+  </div>
+
+  <section class="study" id="study">
+    <div class="stage" id="stage">
+      <div class="puck" id="puck" data-kind="icon">
+        <svg class="icon icon-neutral" viewBox="0 0 200 200" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><circle cx="100" cy="100" r="90"/><ellipse cx="100" cy="100" rx="60" ry="90"/><ellipse cx="100" cy="100" rx="30" ry="90"/><line x1="100" y1="10" x2="100" y2="190"/><ellipse cx="100" cy="40" rx="67.1" ry="10.7"/><ellipse cx="100" cy="70" rx="84.9" ry="13.6"/><ellipse cx="100" cy="100" rx="90" ry="14.4"/><ellipse cx="100" cy="130" rx="84.9" ry="13.6"/><ellipse cx="100" cy="160" rx="67.1" ry="10.7"/></svg>
+        <canvas class="icon icon-hijinx" id="ball"></canvas>
+        <div class="badge"><span id="badge"></span></div>
+        <img class="own" id="own" alt="">
+      </div>
+      <span class="label score" id="score"></span>
+      <div class="meter" aria-hidden="true"><span class="label" id="phase"></span><span class="bar"><i id="bar"></i></span></div>
+    </div>
+  </section>
+
+  <div class="wrap">
+    <footer class="foot">
+      <span class="label">Made by Lucie Oken · <a href="https://hijinx.studio">hijinx.studio</a></span>
+      <span class="label">MIT license</span>
+    </footer>
+  </div>
+
+<script>
+/* theme toggle. hijinx is the default: add #neutral to the URL to open in the neutral theme */
+(() => {
+  const root = document.documentElement, btn = document.getElementById('themeBtn');
+  const fonts = () => { if (document.getElementById('hjFonts')) return;
+    const l = document.createElement('link'); l.id = 'hjFonts'; l.rel = 'stylesheet';
+    l.href = 'https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500&family=IBM+Plex+Sans:wght@400;500&family=Space+Mono&display=swap';
+    document.head.appendChild(l); };
+  const set = t => { root.dataset.theme = t; btn.textContent = 'Theme: ' + t; if (t === 'hijinx') fonts();
+    document.dispatchEvent(new CustomEvent('themechange', { detail: t })); };
+  set(location.hash === '#neutral' ? 'neutral' : 'hijinx');
+  addEventListener('hashchange', () => set(location.hash === '#neutral' ? 'neutral' : 'hijinx'));
+  btn.addEventListener('click', () => set(root.dataset.theme === 'hijinx' ? 'neutral' : 'hijinx'));
+})();
+
+/* the study */
+(() => {
+  const root = document.documentElement;
+  const section = document.getElementById('study'), stage = document.getElementById('stage');
+  const canvas = document.getElementById('canvas'), ctx = canvas && canvas.getContext('2d');
+  const bar = document.getElementById('bar'), phase = document.getElementById('phase');
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
+  const lerp = (a, b, k) => a + (b - a) * k;
+  const seg = (p, a, b) => clamp((p - a) / (b - a));                    // a slice of scroll progress, as 0..1
+  const ease = t => t < .5 ? 4*t*t*t : 1 - Math.pow(-2*t + 2, 3) / 2;     // ease in-out cubic
+  const rgb = hex => [1, 3, 5].map(i => parseInt(hex.slice(i, i + 2), 16));
+  const mix = (a, b, k) => { const A = rgb(a), B = rgb(b);                // blend two hex colors
+    return '#' + A.map((v, i) => Math.round(lerp(v, B[i], k)).toString(16).padStart(2, '0')).join(''); };
+
+  // colors and fonts are read from the theme variables, so a new theme restyles the drawing too
+  const C = {};
+  const readTheme = () => { const s = getComputedStyle(root);
+    for (const n of ['bg', 'ink', 'surface', 'accent', 'accent-2', 'dark', 'font-display', 'font-mono']) C[n] = s.getPropertyValue('--' + n).trim(); };
+
+  // no canvas here: the bouncing thing is an ordinary page element, moved with a transform
+  const puck = document.getElementById('puck'), badge = document.getElementById('badge');
+  const own = document.getElementById('own'), score = document.getElementById('score');
+  let W, H, big;
+  const size = () => { W = stage.clientWidth; H = stage.clientHeight;
+    big = Math.round(clamp(Math.min(W, H) * .32, 110, 260)); stage.style.setProperty('--size', big + 'px'); };
+
+  // the hijinx icon is a picture with a see-through background. it is drawn onto a small canvas and then
+  // flooded with one color, which keeps the picture's shape, so it can change color like everything else.
+  const art = new Image(); art.src = '../assets/disco-ball-ascii.webp';
+  const paint = (ball, color) => {
+    const d = Math.min(devicePixelRatio || 1, 2), n = big * d;
+    if (!ball || !art.naturalWidth || ball.dataset.painted === color + n) return;   // already this color and size
+    ball.width = ball.height = n; ball.dataset.painted = color + n;
+    const g = ball.getContext('2d'), fit = Math.min(n / art.naturalWidth, n / art.naturalHeight), w = art.naturalWidth * fit, h = art.naturalHeight * fit;
+    g.drawImage(art, (n - w) / 2, (n - h) / 2, w, h);
+    g.globalCompositeOperation = 'source-in'; g.fillStyle = color; g.fillRect(0, 0, n, n);
+  };
+
+  const WORDS = { neutral: 'motion', hijinx: 'hijinx' };   // the word on the badge, one per theme
+  const SPEED = 170;                             // cruising speed, in pixels a second
+  const CORNER = 12;                             // how close to a corner counts as hitting it, in pixels
+  const REST = 0, PHASES = [[0, '']];            // scroll is not used here, so there is nothing to time
+  const colors = () => [C.accent, C.surface, C['accent-2'], mix(C.ink, C.bg, .45), C.bg];
+
+  // what is bouncing: the theme's icon, a word, or a picture you pick
+  let userWord = '';
+  const label = () => badge.textContent = userWord || WORDS[root.dataset.theme] || WORDS.neutral;
+  const show = kind => { puck.dataset.kind = kind; label(); copy();
+    document.querySelectorAll('.pick[data-kind]').forEach(b => b.setAttribute('aria-pressed', b.dataset.kind === kind)); };
+  document.querySelectorAll('.pick[data-kind]').forEach(b => b.addEventListener('click', () => show(b.dataset.kind)));
+  document.getElementById('word').addEventListener('input', e => { userWord = e.target.value.trim(); show('word'); });
+  document.getElementById('ownFile').addEventListener('change', e => { const f = e.target.files && e.target.files[0];
+    if (f) { own.src = URL.createObjectURL(f); show('image'); } });
+  document.addEventListener('themechange', () => { label(); copy(); });
+
+  // the trail: copies of the bouncing thing, each placed where the leader was a moment earlier and each fainter
+  const GHOSTS = 6;                              // how many copies follow behind
+  const LAG = .22;                               // seconds between one copy and the next
+  const trail = [], past = [];                   // the copies, and a short record of where the leader has been
+  for (let k = 0; k < GHOSTS; k++) { const g = document.createElement('div'); g.className = 'puck ghost';
+    g.style.opacity = .6 * (1 - k / GHOSTS); stage.insertBefore(g, puck); trail.push(g); }
+  const copy = () => trail.forEach(g => { g.innerHTML = puck.innerHTML; g.dataset.kind = puck.dataset.kind;
+    g.querySelectorAll('[id]').forEach(n => n.removeAttribute('id')); });
+  const trailBtn = document.getElementById('trailBtn');
+  trailBtn.addEventListener('click', () => trailBtn.setAttribute('aria-pressed', stage.classList.toggle('trailing')));
+  label(); copy();
+
+  // where it is, how fast it is going, and the running totals
+  const s = { x: 60, y: 40, vx: SPEED * .74, vy: SPEED * .67, color: 0, bounces: 0, corners: 0, flash: -9, last: 0 };
+
+  // swiping across it passes on a little of the swipe's speed and direction
+  const ptr = { x: 0, y: 0, t: 0 };
+  stage.addEventListener('pointermove', e => {
+    const r = stage.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top, dt = Math.max(8, e.timeStamp - ptr.t) / 1000;
+    if (x > s.x && x < s.x + puck.offsetWidth && y > s.y && y < s.y + puck.offsetHeight && !reduce) {
+      s.vx += clamp((x - ptr.x) / dt, -1200, 1200) * .025; s.vy += clamp((y - ptr.y) / dt, -1200, 1200) * .025;
+      const fast = Math.hypot(s.vx, s.vy) / (SPEED * 2.2);                // a nudge can speed it up, but only so far
+      if (fast > 1) { s.vx /= fast; s.vy /= fast; }
+    }
+    ptr.x = x; ptr.y = y; ptr.t = e.timeStamp;
+  });
+
+  function draw(p, t) {                                 // p (scroll progress) is not used in this study
+    const dt = clamp(t - s.last, 0, .05); s.last = t;   // seconds since the last frame
+    const roomX = W - puck.offsetWidth, roomY = H - puck.offsetHeight;   // how far it can travel each way
+    if (reduce) { s.x = roomX / 2; s.y = roomY / 2; }
+    else {
+      // ease back toward cruising speed after a nudge, and never let it travel flat along a wall
+      const speed = Math.hypot(s.vx, s.vy) || 1, settle = lerp(speed, SPEED, 1 - Math.pow(.25, dt)) / speed;
+      s.vx *= settle; s.vy *= settle;
+      if (Math.abs(s.vx) < SPEED * .35) s.vx = (s.vx < 0 ? -1 : 1) * SPEED * .35;
+      if (Math.abs(s.vy) < SPEED * .35) s.vy = (s.vy < 0 ? -1 : 1) * SPEED * .35;
+      s.x += s.vx * dt; s.y += s.vy * dt;
+
+      let hit = false;                                  // bounce: turn around at each edge
+      if (roomX < 2) s.x = roomX / 2;                   // too wide to travel sideways: just hold it centered
+      else if (s.x <= 0) { s.x = 0; s.vx = Math.abs(s.vx); hit = true; }
+      else if (s.x >= roomX) { s.x = roomX; s.vx = -Math.abs(s.vx); hit = true; }
+      if (roomY < 2) s.y = roomY / 2;
+      else if (s.y <= 0) { s.y = 0; s.vy = Math.abs(s.vy); hit = true; }
+      else if (s.y >= roomY) { s.y = roomY; s.vy = -Math.abs(s.vy); hit = true; }
+      if (hit) {
+        s.bounces++; s.color = (s.color + 1) % colors().length;          // a new color on every bounce
+        const nearSide = Math.min(s.x, roomX - s.x) <= CORNER, nearEnd = Math.min(s.y, roomY - s.y) <= CORNER;
+        if (nearSide && nearEnd && t - s.flash > 1) { s.corners++; s.flash = t; }   // touching two walls at once: a corner
+      }
+    }
+    const color = colors()[s.color];
+    puck.style.transform = `translate3d(${s.x}px, ${s.y}px, 0)`;
+    puck.style.color = color; paint(document.getElementById('ball'), color);
+
+    // remember where it was, then put each copy where the leader was LAG seconds before the copy ahead of it
+    past.push({ t, x: s.x, y: s.y, color });
+    while (past.length && past[0].t < t - GHOSTS * LAG - .5) past.shift();
+    if (stage.classList.contains('trailing')) trail.forEach((g, k) => {
+      let was = past[0]; for (const e of past) { if (e.t > t - (k + 1) * LAG) break; was = e; }
+      g.style.transform = `translate3d(${was.x}px, ${was.y}px, 0)`;
+      g.style.color = was.color; paint(g.querySelector('canvas'), was.color);
+    });
+    stage.classList.toggle('flash', t - s.flash < .35);
+    score.textContent = `Corners ${s.corners} · Bounces ${s.bounces}`;
+  }
+
+
+  function frame(now) {
+    const r = section.getBoundingClientRect();
+    if (reduce || (r.bottom > 0 && r.top < innerHeight)) {               // only redraw while the study is on screen
+      const span = r.height - innerHeight;                               // how much scrolling the study takes
+      const p = reduce ? REST : span > 0 ? clamp(-r.top / span) : 0;
+      draw(p, reduce ? 0 : now / 1000);                                  // p = scroll progress, second value = seconds
+      bar.style.width = (p * 100) + '%';
+      phase.textContent = PHASES.filter(s => p >= s[0]).pop()[1];
+    }
+    if (!reduce) requestAnimationFrame(frame);
+  }
+  const still = () => { if (reduce) frame(0); };                         // reduced motion: one finished frame, redrawn only when needed
+  readTheme(); size(); requestAnimationFrame(frame);
+  addEventListener('resize', () => { size(); still(); });
+  document.addEventListener('themechange', () => { readTheme(); still(); });
+  if (document.fonts) document.fonts.addEventListener('loadingdone', still);
+})();
+</script>
+</body>
+</html>
