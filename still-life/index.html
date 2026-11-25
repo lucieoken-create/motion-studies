@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="hijinx">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Still life · motion-studies</title>
+<style>
+  /* ---------- themes: change these variables to restyle the study ---------- */
+  :root, [data-theme="neutral"] {
+    --bg: #F4F4F1; --ink: #18181B; --surface: #E2E2DD; --accent: #CFCFC8; --accent-2: #E9E9E4;
+    --muted: #5F5F66; --dark: #111113; --border: rgba(24,24,27,.14); --border-strong: rgba(24,24,27,.3);
+    --font-display: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    --font-body: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  [data-theme="hijinx"] {
+    --bg: #F7F8F6; --ink: #52489C; --surface: #D4DCEF; --accent: #E5E460; --accent-2: #F8E49B;
+    --muted: #625C94; --dark: #242038; --border: rgba(82,72,156,.18); --border-strong: rgba(82,72,156,.35);
+    --font-display: "Bricolage Grotesque", system-ui, sans-serif;
+    --font-body: "IBM Plex Sans", system-ui, sans-serif;
+    --font-mono: "Space Mono", ui-monospace, monospace;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--font-body); -webkit-font-smoothing: antialiased; }
+  .wrap { max-width: 1200px; margin: 0 auto; padding: 0 32px; }
+  .label { font: 400 11px/1.4 var(--font-mono); letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+  .top { display: flex; justify-content: space-between; align-items: center; padding: 24px 0; border-bottom: 1px solid var(--border); }
+  .top a { color: var(--ink); text-decoration: none; }
+  .top .links { display: flex; align-items: center; gap: 20px; }
+  .top .links a:hover { color: var(--ink); }
+  .theme-btn { font: 400 11px/1 var(--font-mono); letter-spacing: .14em; text-transform: uppercase; color: var(--ink); background: none; border: 1px solid var(--border-strong); padding: 8px 12px; cursor: pointer; }
+  .theme-btn:hover { border-color: var(--ink); }
+
+  .intro { padding: 128px 0 96px; display: grid; gap: 24px; max-width: 760px; }
+  .eyebrow { font: 400 12px/1.4 var(--font-mono); letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
+  h1 { font: 500 clamp(44px, 6vw, 80px)/1.02 var(--font-display); letter-spacing: -.025em; margin: 0; text-wrap: balance; }
+  .lead { font-size: 21px; line-height: 1.55; margin: 0; max-width: 58ch; }
+  .meta { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+  /* square tags that say what drives the motion */
+  .tag { font: 400 10px/1 var(--font-mono); letter-spacing: .14em; text-transform: uppercase; color: var(--ink); border: 1px solid var(--border-strong); padding: 5px 7px; white-space: nowrap; }
+  .tag.pointer { background: var(--accent); border-color: var(--accent); }
+  .pick { font: 400 12px/1 var(--font-mono); letter-spacing: .1em; text-transform: uppercase; color: var(--ink); background: none; border: 1px solid var(--border-strong); padding: 8px 12px; cursor: pointer; width: max-content; }
+  .pick[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--bg); }
+
+  /* ---------- the study ---------- */
+  .study { position: relative; height: 420vh; }             /* scroll length: taller = slower */
+  .stage { position: sticky; top: 0; height: 100vh; overflow: hidden; background: var(--dark); }
+  .stage canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+
+  .meter { position: absolute; right: 32px; bottom: 32px; display: flex; gap: 16px; align-items: center; background: var(--bg); padding: 8px 12px; border: 1px solid var(--border-strong); }
+  .meter .bar { width: 120px; height: 1px; background: var(--border-strong); position: relative; }
+  .meter .bar i { position: absolute; left: 0; top: -1px; height: 3px; background: var(--ink); width: 0; }
+
+  .foot { display: flex; justify-content: space-between; padding: 24px 0 48px; border-top: 1px solid var(--border); margin-top: 96px; }
+  .foot a { color: inherit; text-decoration: none; border-bottom: 1px solid var(--border-strong); }
+  @media (max-width: 760px) { .wrap { padding: 0 24px; } .meter { display: none; } .top .links a { display: none; } }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="top">
+      <a class="label" href="../">← motion-studies</a>
+      <div class="links"><a class="label" href="https://hijinx.studio">hijinx.studio ↗</a><a class="label" href="https://github.com/lucieoken-create/motion-studies">GitHub ↗</a>
+        <button class="theme-btn" id="themeBtn">Theme: hijinx</button>
+      </div>
+    </header>
+    <section class="intro">
+      <div class="meta"><span class="eyebrow">Motion study · still life</span><span class="tag">Scroll</span><span class="tag pointer">Pointer</span></div>
+      <h1>A bouquet that comes apart</h1>
+      <p class="lead">A painting of flowers, redrawn as flat shapes with outlines. Scrolling parts the bouquet flower by flower, then opens each flower into its pieces, drifting toward you. Your pointer leans the whole scene.</p>
+      <button class="pick" id="paintBtn" aria-pressed="false">Painting colors</button>
+    </section>
+  </div>
+
+  <section class="study" id="study">
+    <div class="stage" id="stage">
+      <canvas id="canvas" aria-hidden="true"></canvas>
+      <script src="pieces.js"></script>
+      <div class="meter" aria-hidden="true"><span class="label" id="phase"></span><span class="bar"><i id="bar"></i></span></div>
+    </div>
+  </section>
+
+  <div class="wrap">
+    <footer class="foot">
+      <span class="label">Made by Lucie Oken · <a href="https://hijinx.studio">hijinx.studio</a></span>
+      <span class="label"><a href="https://github.com/lucieoken-create/motion-studies">GitHub ↗</a> · MIT license</span>
+    </footer>
+  </div>
+
+<script>
+/* theme toggle. hijinx is the default: add #neutral to the URL to open in the neutral theme */
+(() => {
+  const root = document.documentElement, btn = document.getElementById('themeBtn');
+  const fonts = () => { if (document.getElementById('hjFonts')) return;
+    const l = document.createElement('link'); l.id = 'hjFonts'; l.rel = 'stylesheet';
+    l.href = 'https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500&family=IBM+Plex+Sans:wght@400;500&family=Space+Mono&display=swap';
+    document.head.appendChild(l); };
+  const set = t => { root.dataset.theme = t; btn.textContent = 'Theme: ' + t; if (t === 'hijinx') fonts();
+    document.dispatchEvent(new CustomEvent('themechange', { detail: t })); };
+  set(location.hash === '#neutral' ? 'neutral' : 'hijinx');
+  addEventListener('hashchange', () => set(location.hash === '#neutral' ? 'neutral' : 'hijinx'));
+  btn.addEventListener('click', () => set(root.dataset.theme === 'hijinx' ? 'neutral' : 'hijinx'));
+})();
+
+/* the study */
+(() => {
+  const root = document.documentElement;
+  const section = document.getElementById('study'), stage = document.getElementById('stage');
+  const canvas = document.getElementById('canvas'), ctx = canvas && canvas.getContext('2d');
+  const bar = document.getElementById('bar'), phase = document.getElementById('phase');
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
+  const lerp = (a, b, k) => a + (b - a) * k;
+  const seg = (p, a, b) => clamp((p - a) / (b - a));                    // a slice of scroll progress, as 0..1
+  const ease = t => t < .5 ? 4*t*t*t : 1 - Math.pow(-2*t + 2, 3) / 2;     // ease in-out cubic
+  const rgb = hex => [1, 3, 5].map(i => parseInt(hex.slice(i, i + 2), 16));
+  const mix = (a, b, k) => { const A = rgb(a), B = rgb(b);                // blend two hex colors
+    return '#' + A.map((v, i) => Math.round(lerp(v, B[i], k)).toString(16).padStart(2, '0')).join(''); };
+
+  // colors and fonts are read from the theme variables, so a new theme restyles the drawing too
+  const C = {};
+  const readTheme = () => { const s = getComputedStyle(root);
+    for (const n of ['bg', 'ink', 'surface', 'accent', 'accent-2', 'dark', 'font-display', 'font-mono']) C[n] = s.getPropertyValue('--' + n).trim(); };
+
+  let W, H;
+  const size = () => { const d = Math.min(devicePixelRatio || 1, 2);
+    W = stage.clientWidth; H = stage.clientHeight;
+    canvas.width = W * d; canvas.height = H * d; ctx.setTransform(d, 0, 0, d, 0, 0); };
+
+  // the picture lives in pieces.js: a few hundred flat-colored shapes, most of them tagged with the bloom they belong to
+  const ART = window.STILL_LIFE;
+  const REST = 0;                                // the still frame shown when motion is turned off: the whole picture
+  const PHASES = [[0, 'Whole'], [.05, 'Parting'], [.4, 'Opening'], [.92, 'Scattered']];
+  const LINE = 2.4;                              // outline thickness, in picture pixels
+
+  const rand = n => { const v = Math.sin(n * 12.9898) * 43758.5453; return v - Math.floor(v); };   // a fixed "random" 0..1
+  // get each piece ready once: its outline as a reusable shape drawn around its own middle, and a few fixed random numbers
+  const pieces = ART.pieces.map((row, i) => {
+    const [bloom, color, ...xy] = row; let cx = 0, cy = 0; const n = xy.length / 2;
+    for (let k = 0; k < n; k++) { cx += xy[k * 2] / n; cy += xy[k * 2 + 1] / n; }
+    const shape = new Path2D();
+    for (let k = 0; k < n; k++) shape.lineTo(xy[k * 2] - cx, xy[k * 2 + 1] - cy);
+    shape.closePath();
+    return { bloom, rgb: rgb('#' + color), cx, cy, shape, near: rand(i + .1), spin: rand(i + .2) - .5, n: i, px: 0, py: 0 };
+  });
+  // where each bloom's middle is. a loose piece counts as a bloom of its own
+  const blooms = ART.blooms.map((_, b) => { const mine = pieces.filter(q => q.bloom === b);
+    return { x: mine.reduce((a, q) => a + q.cx, 0) / mine.length, y: mine.reduce((a, q) => a + q.cy, 0) / mine.length, near: rand(b + 50), spin: rand(b + 60) - .5 }; });
+  for (const q of pieces) q.home = q.bloom < 0 ? { x: q.cx, y: q.cy, near: q.near, spin: q.spin } : blooms[q.bloom];
+  pieces.sort((a, b) => (a.home.near + a.near) - (b.home.near + b.near));   // draw the ones that end up nearest last, so they pass in front
+  const MID = { x: ART.w / 2, y: ART.h * .48 };  // the middle of the bouquet: everything moves away from here
+
+  // colors. by default each piece takes a color from the theme, chosen by how warm and how light it is in the painting
+  let painting = false;
+  const hsl = ([r, g, b]) => { r /= 255; g /= 255; b /= 255; const mx = Math.max(r, g, b), mn = Math.min(r, g, b), l = (mx + mn) / 2, d = mx - mn;
+    const h = !d ? 0 : mx === r ? ((g - b) / d + 6) % 6 : mx === g ? (b - r) / d + 2 : (r - g) / d + 4; return [h * 60, d ? d / (1 - Math.abs(2 * l - 1)) : 0, l]; };
+  const tint = c => { const [h, sat, l] = hsl(c);
+    if ((h < 50 || h > 335) && sat > .42 && l < .72) return mix(mix(C.accent, C['accent-2'], clamp((l - .3) * 2.2)), C.dark, l < .3 ? .35 : 0);   // reds and oranges take the accent
+    if (h > 70 && h < 270 && sat > .18) return mix(C.ink, C.surface, clamp((l - .18) * 1.9));                                                  // greens and blues run from ink to surface
+    return l > .62 ? mix(C.surface, C.bg, clamp((l - .62) * 3.4)) : mix(C.ink, C.surface, clamp((l - .15) * 2)); };                             // pinks and whites run from surface to background
+  let line = '#000', backdrop = '#000';
+  const recolor = () => { backdrop = painting ? '#1c1b19' : C.dark; line = mix(backdrop, '#000000', .6);
+    for (const q of pieces) q.fill = painting ? '#' + q.rgb.map(v => v.toString(16).padStart(2, '0')).join('') : tint(q.rgb); };
+  document.addEventListener('themechange', () => { recolor(); });
+  const paintBtn = document.getElementById('paintBtn');
+  paintBtn.addEventListener('click', () => { painting = !painting; paintBtn.setAttribute('aria-pressed', painting); recolor(); still(); });
+
+  const ptr = { x: 0, y: 0, on: false, k: 0 };
+  stage.addEventListener('pointermove', e => { const r = stage.getBoundingClientRect();
+    ptr.x = e.clientX - r.left; ptr.y = e.clientY - r.top; ptr.on = true; });
+  stage.addEventListener('pointerleave', () => ptr.on = false);
+  const turn = (x, y, a) => [x * Math.cos(a) - y * Math.sin(a), x * Math.sin(a) + y * Math.cos(a)];
+
+  function draw(p, t) {
+    if (!pieces[0].fill) recolor();
+    // timing: change these ranges to retime the study
+    const part = ease(seg(p, .05, .55));                // the bouquet parts: each bloom moves off as one
+    const open = ease(seg(p, .4, .98));                 // each bloom opens into its own pieces
+    const loose = Math.max(part * .4, open);            // how free the pieces are, for the drifting and the pointer
+    ptr.k += ((ptr.on && !reduce ? 1 : 0) - ptr.k) * .08;
+
+    const fit = Math.min(H * .9 / ART.h, W * .92 / ART.w), ox = W / 2 - MID.x * fit, oy = H * .5 - ART.h / 2 * fit;   // picture pixels to screen pixels
+    const mx = (ptr.x - ox) / fit, my = (ptr.y - oy) / fit;                                                          // the pointer, in picture pixels
+    ctx.fillStyle = backdrop; ctx.fillRect(0, 0, W, H);
+    ctx.strokeStyle = line; ctx.lineJoin = 'round';
+
+    for (const q of pieces) {
+      const b = q.home;
+      // 1. the bloom moves away from the middle of the bouquet and turns a little
+      const bx = MID.x + (b.x - MID.x) * (1 + part * (.45 + b.near * .5)), by = MID.y + (b.y - MID.y) * (1 + part * (.45 + b.near * .5));
+      const lean = part * b.spin * .35;
+      // 2. the piece moves away from the middle of its bloom
+      const [dx, dy] = turn(q.cx - b.x, q.cy - b.y, lean), apart = 1 + part * .06 + open * (1.1 + q.near * 1.5);
+      let x = bx + dx * apart, y = by + dy * apart;
+      // 3. coming toward you: nearer pieces grow, and spread further from the middle, as things do when they approach
+      const size = 1 + part * b.near * .22 + open * q.near * .85;
+      x = MID.x + (x - MID.x) * (1 + (size - 1) * .7); y = MID.y + (y - MID.y) * (1 + (size - 1) * .7);
+      // a slow float, so it is never frozen while you read
+      x += loose * 7 * Math.sin(t * .4 + q.n); y += loose * 7 * Math.cos(t * .33 + q.n * 1.7);
+      // the pointer: the whole scene leans with it, nearer pieces more, and pieces right under it are nudged aside
+      x += (mx - MID.x) * (size - 1) * .3 * ptr.k; y += (my - MID.y) * (size - 1) * .3 * ptr.k;
+      const ax = x - mx, ay = y - my, d = Math.hypot(ax, ay) || 1, push = Math.max(0, 1 - d / 150) * 46 * loose * ptr.k;
+      q.px += (ax / d * push - q.px) * .12; q.py += (ay / d * push - q.py) * .12;
+
+      ctx.save();
+      ctx.translate(ox + (x + q.px) * fit, oy + (y + q.py) * fit); ctx.rotate(lean + open * q.spin * 1.3); ctx.scale(fit * size, fit * size);
+      ctx.fillStyle = q.fill; ctx.fill(q.shape);
+      ctx.lineWidth = LINE / size; ctx.stroke(q.shape);
+      ctx.restore();
+    }
+  }
+
+
+  function frame(now) {
+    const r = section.getBoundingClientRect();
+    if (reduce || (r.bottom > 0 && r.top < innerHeight)) {               // only redraw while the study is on screen
+      const span = r.height - innerHeight;                               // how much scrolling the study takes
+      const p = reduce ? REST : span > 0 ? clamp(-r.top / span) : 0;
+      draw(p, reduce ? 0 : now / 1000);                                  // p = scroll progress, second value = seconds
+      bar.style.width = (p * 100) + '%';
+      phase.textContent = PHASES.filter(s => p >= s[0]).pop()[1];
+    }
+    if (!reduce) requestAnimationFrame(frame);
+  }
+  const still = () => { if (reduce) frame(0); };                         // reduced motion: one finished frame, redrawn only when needed
+  readTheme(); size(); requestAnimationFrame(frame);
+  addEventListener('resize', () => { size(); still(); });
+  document.addEventListener('themechange', () => { readTheme(); still(); });
+  if (document.fonts) document.fonts.addEventListener('loadingdone', still);
+})();
+</script>
+</body>
+</html>
