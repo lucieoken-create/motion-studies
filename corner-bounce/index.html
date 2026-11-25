@@ -174,7 +174,7 @@
     if (!ball || !art.naturalWidth || ball.dataset.painted === color + n) return;   // already this color and size
     ball.width = ball.height = n; ball.dataset.painted = color + n;
     const g = ball.getContext('2d'), fit = Math.min(n / art.naturalWidth, n / art.naturalHeight), w = art.naturalWidth * fit, h = art.naturalHeight * fit;
-    g.drawImage(art, (n - w) / 2, (n - h) / 2, w, h);
+    g.imageSmoothingQuality = 'high'; g.drawImage(art, (n - w) / 2, (n - h) / 2, w, h);
     g.globalCompositeOperation = 'source-in'; g.fillStyle = color; g.fillRect(0, 0, n, n);
   };
 
@@ -202,7 +202,8 @@
   for (let k = 0; k < GHOSTS; k++) { const g = document.createElement('div'); g.className = 'puck ghost';
     g.style.opacity = .6 * (1 - k / GHOSTS); stage.insertBefore(g, puck); trail.push(g); }
   const copy = () => trail.forEach(g => { g.innerHTML = puck.innerHTML; g.dataset.kind = puck.dataset.kind;
-    g.querySelectorAll('[id]').forEach(n => n.removeAttribute('id')); });
+    g.querySelectorAll('[id]').forEach(n => n.removeAttribute('id'));
+    g.querySelectorAll('canvas').forEach(c => delete c.dataset.painted); });   // a copied canvas arrives empty, so it must be painted afresh
   const trailBtn = document.getElementById('trailBtn');
   trailBtn.addEventListener('click', () => trailBtn.setAttribute('aria-pressed', stage.classList.toggle('trailing')));
   label(); copy();
@@ -248,7 +249,10 @@
       }
     }
     const color = colors()[s.color];
-    puck.style.transform = `translate3d(${s.x}px, ${s.y}px, 0)`;
+    // place everything on whole screen pixels. the icon is very fine line art, and parked between pixels it
+    // gets re-blurred a little differently every frame, which reads as flicker.
+    const dpr = devicePixelRatio || 1, px = v => Math.round(v * dpr) / dpr;
+    puck.style.transform = `translate3d(${px(s.x)}px, ${px(s.y)}px, 0)`;
     puck.style.color = color; paint(document.getElementById('ball'), color);
 
     // remember where it was, then put each copy where the leader was LAG seconds before the copy ahead of it
@@ -260,7 +264,7 @@
       // the record only has one entry per frame, so blend between the two either side of that moment.
       // snapping to the nearer one makes a copy stutter, most visibly the last, slowest-looking one.
       const a = past[i], b = past[i + 1] || a, mid = clamp((when - a.t) / ((b.t - a.t) || 1));
-      g.style.transform = `translate3d(${lerp(a.x, b.x, mid)}px, ${lerp(a.y, b.y, mid)}px, 0)`;
+      g.style.transform = `translate3d(${px(lerp(a.x, b.x, mid))}px, ${px(lerp(a.y, b.y, mid))}px, 0)`;
       g.style.color = a.color; paint(g.querySelector('canvas'), a.color);
     });
     stage.classList.toggle('flash', t - s.flash < .35);
