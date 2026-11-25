@@ -27,6 +27,8 @@
   .label { font: 400 11px/1.4 var(--font-mono); letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
   .top { display: flex; justify-content: space-between; align-items: center; padding: 24px 0; border-bottom: 1px solid var(--border); }
   .top a { color: var(--ink); text-decoration: none; }
+  .top .links { display: flex; align-items: center; gap: 20px; }
+  .top .links a:hover { color: var(--ink); }
   .theme-btn { font: 400 11px/1 var(--font-mono); letter-spacing: .14em; text-transform: uppercase; color: var(--ink); background: none; border: 1px solid var(--border-strong); padding: 8px 12px; cursor: pointer; }
   .theme-btn:hover { border-color: var(--ink); }
 
@@ -75,19 +77,21 @@
 
   .foot { display: flex; justify-content: space-between; padding: 24px 0 48px; border-top: 1px solid var(--border); margin-top: 96px; }
   .foot a { color: inherit; text-decoration: none; border-bottom: 1px solid var(--border-strong); }
-  @media (max-width: 760px) { .wrap { padding: 0 24px; } .meter { display: none; } }
+  @media (max-width: 760px) { .wrap { padding: 0 24px; } .meter { display: none; } .top .links a { display: none; } }
 </style>
 </head>
 <body>
   <div class="wrap">
     <header class="top">
       <a class="label" href="../">← motion-studies</a>
-      <button class="theme-btn" id="themeBtn">Theme: hijinx</button>
+      <div class="links"><a class="label" href="https://hijinx.studio">hijinx.studio ↗</a><a class="label" href="https://github.com/lucieoken-create/motion-studies">GitHub ↗</a>
+        <button class="theme-btn" id="themeBtn">Theme: hijinx</button>
+      </div>
     </header>
     <section class="intro">
       <div class="meta"><span class="eyebrow">Motion study · corner bounce</span><span class="tag pointer">Pointer</span></div>
       <h1>Will it hit the corner?</h1>
-      <p class="lead">One thing drifts around the screen, bouncing off the edges and changing color each time. Swipe across it and it veers off course, then settles back to its usual pace. Every so often it lands exactly in a corner. Turn on Trail to have copies follow behind it.</p>
+      <p class="lead">One thing drifts around the screen, bouncing off the edges and changing color. Swipe across it to knock it off course. Turn on Trail and copies follow behind.</p>
       <div class="picks">
         <span>Bounce</span>
         <button class="pick" data-kind="icon" aria-pressed="true">Icon</button>
@@ -115,7 +119,7 @@
   <div class="wrap">
     <footer class="foot">
       <span class="label">Made by Lucie Oken · <a href="https://hijinx.studio">hijinx.studio</a></span>
-      <span class="label">MIT license</span>
+      <span class="label"><a href="https://github.com/lucieoken-create/motion-studies">GitHub ↗</a> · MIT license</span>
     </footer>
   </div>
 
@@ -249,11 +253,15 @@
 
     // remember where it was, then put each copy where the leader was LAG seconds before the copy ahead of it
     past.push({ t, x: s.x, y: s.y, color });
-    while (past.length && past[0].t < t - GHOSTS * LAG - .5) past.shift();
+    while (past.length > 2 && past[1].t < t - GHOSTS * LAG - .5) past.shift();
     if (stage.classList.contains('trailing')) trail.forEach((g, k) => {
-      let was = past[0]; for (const e of past) { if (e.t > t - (k + 1) * LAG) break; was = e; }
-      g.style.transform = `translate3d(${was.x}px, ${was.y}px, 0)`;
-      g.style.color = was.color; paint(g.querySelector('canvas'), was.color);
+      const when = t - (k + 1) * LAG;                   // the moment this copy is showing
+      let i = 0; while (i < past.length - 2 && past[i + 1].t <= when) i++;
+      // the record only has one entry per frame, so blend between the two either side of that moment.
+      // snapping to the nearer one makes a copy stutter, most visibly the last, slowest-looking one.
+      const a = past[i], b = past[i + 1] || a, mid = clamp((when - a.t) / ((b.t - a.t) || 1));
+      g.style.transform = `translate3d(${lerp(a.x, b.x, mid)}px, ${lerp(a.y, b.y, mid)}px, 0)`;
+      g.style.color = a.color; paint(g.querySelector('canvas'), a.color);
     });
     stage.classList.toggle('flash', t - s.flash < .35);
     score.textContent = `Corners ${s.corners} · Bounces ${s.bounces}`;

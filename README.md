@@ -106,7 +106,7 @@ One thing drifts around a dark screen, bouncing off the edges and changing color
 
 `Scroll` `Pointer`
 
-Three presets, like an old music visualizer, each drawn in thin bright lines on a dark screen. **Beams:** bands of close lines that all cross at one point, fan out with a slight bow, and slowly sweep around it; a few break up into bits as they go. **Swirl:** ribbons of parallel lines sent up the jet between pairs of whirlpools, where they split and curl back on both sides, like mushroom caps of smoke. **Burst:** sparks thrown outward, each a short streak with a glowing dot, and a dark sphere drifting in front. Scrolling switches between them, and all three gather around your pointer. A built-in pulse every two seconds stands in for the music; it does not listen to sound.
+Three presets, like an old music visualizer, each drawn in thin bright lines on a dark screen. **Beams:** bands of close lines that all cross at one point, fan out with a slight bow, and slowly sweep around it; every third band is drawn as bits of light flowing outward. **Swirl:** ribbons of parallel lines sent up the jet between pairs of whirlpools, where they split and curl back on both sides, like mushroom caps of smoke. **Burst:** sparks thrown outward, each a short streak with a glowing dot, and a dark sphere drifting in front. Scrolling switches between them, and all three gather around your pointer. A built-in pulse every two seconds stands in for the music; it does not listen to sound.
 
 | Neutral | hijinx theme (default) |
 | --- | --- |
@@ -151,4 +151,4 @@ Cell fill (07) was inspired by Spotify's [Spreadbeats](https://ads.spotify.com/s
 
 Studies 03 to 06 started from pieces on [brik.space](https://brik.space) and were rebuilt from scratch with different motion, color and code: [Le Parc - Visual Blueprint](https://brik.space/tools/remix-of-visual-blueprint-studio-mpzo7ppa) and [Liquid Rainbow Topography Hero](https://brik.space/tools/liquid-topography-hero-remix-remix-mpzo70fv) by Maya Netzer, [type for fun 04](https://brik.space/tools/remix-of-remix-of-cascade-type-msfywfiu) by Clueless studio, and [BLB](https://brik.space/tools/thresholded-fluid-blo-mo8z7jxh) by Or Yogev.
 
-Made by [Lucie Oken](https://hijinx.studio) of hijinx. The marble bust and the ASCII disco ball in the hijinx theme are Lucie's own and are included under the same license. MIT licensed: use these anywhere, including client work, and keep the license notice.
+Made by Lucie Oken of [hijinx](https://hijinx.studio), a creative AI enablement studio. The marble bust and the ASCII disco ball in the hijinx theme are Lucie's own and are included under the same license. MIT licensed: use these anywhere, including client work, and keep the license notice.

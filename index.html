@@ -24,6 +24,12 @@
   .wrap { max-width: 1200px; margin: 0 auto; padding: 0 32px; }
   .label { font: 400 11px/1.4 var(--font-mono); letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
   .top { display: flex; justify-content: space-between; align-items: center; padding: 24px 0; border-bottom: 1px solid var(--border); }
+  .top a { color: var(--ink); text-decoration: none; }
+  .top .links { display: flex; align-items: center; gap: 20px; }
+  .top .links a:hover { color: var(--ink); }
+  .byline { font-size: 17px; line-height: 1.5; margin: 0; color: var(--muted); }
+  .byline a { color: var(--ink); text-decoration: none; border-bottom: 1px solid var(--border-strong); }
+  .byline a:hover { border-bottom-color: var(--ink); }
   .theme-btn { font: 400 11px/1 var(--font-mono); letter-spacing: .14em; text-transform: uppercase; color: var(--ink); background: none; border: 1px solid var(--border-strong); padding: 8px 12px; cursor: pointer; }
   .intro { padding: 128px 0 64px; display: grid; gap: 24px; max-width: 760px; }
   h1 { font: 500 clamp(44px, 6vw, 80px)/1.02 var(--font-display); letter-spacing: -.025em; margin: 0; }
@@ -46,6 +52,7 @@
   .foot a { color: inherit; text-decoration: none; border-bottom: 1px solid var(--border-strong); }
   @media (max-width: 760px) {
     .wrap { padding: 0 24px; }
+    .top .links a { display: none; }
     .grid { grid-template-columns: 1fr; }
     .study, .study:nth-child(even) { padding: 32px 0; border-left: 0; border-top: 0; border-bottom: 1px solid var(--border); }
   }
@@ -55,81 +62,84 @@
   <div class="wrap">
     <header class="top">
       <span class="label">motion-studies</span>
-      <button class="theme-btn" id="themeBtn">Theme: hijinx</button>
+      <div class="links"><a class="label" href="https://hijinx.studio">hijinx.studio ↗</a><a class="label" href="https://github.com/lucieoken-create/motion-studies">GitHub ↗</a>
+        <button class="theme-btn" id="themeBtn">Theme: hijinx</button>
+      </div>
     </header>
     <section class="intro">
       <span class="label">Scroll and pointer motion, one file each</span>
       <h1>Motion studies</h1>
-      <p class="lead">Small motion pieces for websites and digital pages. Some are driven by scroll, some by the pointer, and some by both. Each one is a single HTML file with no libraries, so you can open it, change a few variables and drop it into your own build.</p>
+      <p class="lead">Small motion pieces for websites, driven by scroll, the pointer or both. Each is one HTML file with no libraries: open it, change a few variables and drop it into your build.</p>
+      <p class="byline">Made by Lucie Oken of <a href="https://hijinx.studio">hijinx</a>, a creative AI enablement studio.</p>
     </section>
     <section class="grid">
       <a class="study" href="card-unfold/">
         <img src="previews/card-unfold-hijinx.gif" data-preview="card-unfold" alt="A card folded in three opens flap by flap, then grows to fill the screen">
         <span class="label">01</span>
         <div class="head"><h2>Card unfold</h2><span class="tag">Scroll</span></div>
-        <p>A card folded in three opens on its hinges as you scroll, then grows until it's the page.</p>
+        <p>A card folded in three swings open as you scroll, then grows to fill the page.</p>
         <span class="go">Open the study <span>→</span></span>
       </a>
       <a class="study" href="card-flip/">
         <img src="previews/card-flip-hijinx.gif" data-preview="card-flip" alt="A wide photo splits into four strips that flip into playing cards">
         <span class="label">02</span>
         <div class="head"><h2>Card flip</h2><span class="tag">Scroll</span></div>
-        <p>A wide photo splits into four strips that flip over one by one and land as playing cards.</p>
+        <p>A wide photo splits into four strips that flip over and land as playing cards.</p>
         <span class="go">Open the study <span>→</span></span>
       </a>
       <a class="study" href="stripe-swell/">
         <img src="previews/stripe-swell-hijinx.gif" data-preview="stripe-swell" alt="A column of stripes swells and pinches, then widens to fill the screen">
         <span class="label">03</span>
         <div class="head"><h2>Stripe swell</h2><span class="tag">Scroll</span></div>
-        <p>Bulges drift down a column of mirrored stripes. Scrolling swells them, then widens the column until the stripes are the page.</p>
+        <p>Bulges drift down a column of mirrored stripes. Scrolling swells them until they fill the page.</p>
         <span class="go">Open the study <span>→</span></span>
       </a>
       <a class="study" href="type-cascade/">
         <img src="previews/type-cascade-hijinx.gif" data-preview="type-cascade" alt="A repeated word circles in a swirl of merging liquid shapes">
         <span class="label">04</span>
         <div class="head"><h2>Type cascade</h2><span class="tag pointer">Pointer</span></div>
-        <p>One word, repeated, turns slowly in a lumpy swirl, and the shapes around the words melt together. It just plays, and your pointer pushes the words away.</p>
+        <p>One word, repeated, turns in a lumpy swirl of melting shapes. Your pointer pushes the words away.</p>
         <span class="go">Open the study <span>→</span></span>
       </a>
       <a class="study" href="fluid-blobs/">
         <img src="previews/fluid-blobs-hijinx.gif" data-preview="fluid-blobs" alt="Drifting circles of color melt together into thick blobs">
         <span class="label">05</span>
         <div class="head"><h2>Fluid blobs</h2><span class="tag">Scroll</span><span class="tag pointer">Pointer</span></div>
-        <p>Plain circles drift past each other. Scrolling melts them into thick blobs whose colors bleed together. Your pointer is a circle too.</p>
+        <p>Circles drift past each other. Scrolling melts them into thick blobs. Your pointer is a circle too.</p>
         <span class="go">Open the study <span>→</span></span>
       </a>
       <a class="study" href="ribbon-twist/">
         <img src="previews/ribbon-twist-hijinx.gif" data-preview="ribbon-twist" alt="A ribbon of color bands glides down the page and turns over">
         <span class="label">06</span>
         <div class="head"><h2>Ribbon twist</h2><span class="tag">Scroll</span></div>
-        <p>One ribbon of color glides down the page in slow curves. Scrolling deepens the curves, then turns it over.</p>
+        <p>A ribbon of color glides down the page. Scrolling deepens its curves, then turns it over.</p>
         <span class="go">Open the study <span>→</span></span>
       </a>
       <a class="study" href="cell-fill/">
         <img src="previews/cell-fill-hijinx.gif" data-preview="cell-fill" alt="A spreadsheet whose cells change color to make wipes, frames, rings and a word">
         <span class="label">07</span>
         <div class="head"><h2>Cell fill</h2><span class="tag pointer">Pointer</span></div>
-        <p>A spreadsheet where nothing moves and only the cell colors change: wipes, tunnels, rings and a word spelled in cells. One cell follows your pointer.</p>
+        <p>A spreadsheet where only the cell colors change: wipes, tunnels, rings and a word. One cell follows your pointer.</p>
         <span class="go">Open the study <span>→</span></span>
       </a>
       <a class="study" href="corner-bounce/">
         <img src="previews/corner-bounce-hijinx.gif" data-preview="corner-bounce" alt="An icon drifts around a dark screen, bouncing off the edges and changing color">
         <span class="label">08</span>
         <div class="head"><h2>Corner bounce</h2><span class="tag pointer">Pointer</span></div>
-        <p>An icon or a word drifts around the screen, bouncing off the edges and changing color. Swipe across it to knock it off course.</p>
+        <p>An icon or word bounces around the screen, changing color. Swipe across it to knock it off course.</p>
         <span class="go">Open the study <span>→</span></span>
       </a>
       <a class="study" href="line-visualizer/">
         <img src="previews/line-visualizer-hijinx.gif" data-preview="line-visualizer" alt="Bright lines on a dark screen form beams of light, swirling ribbons and a burst of sparks">
         <span class="label">09</span>
         <div class="head"><h2>Line visualizer</h2><span class="tag">Scroll</span><span class="tag pointer">Pointer</span></div>
-        <p>Three presets in bright lines, like an old music visualizer: beams of light, swirling ribbons and a burst of sparks. Scroll to switch; they gather around your pointer.</p>
+        <p>Beams, swirling ribbons and a burst of sparks, like an old music visualizer. Scroll to switch; all follow your pointer.</p>
         <span class="go">Open the study <span>→</span></span>
       </a>
     </section>
     <footer class="foot">
       <span class="label">Made by Lucie Oken · <a href="https://hijinx.studio">hijinx.studio</a></span>
-      <span class="label"><a href="https://github.com/lucieoken-create/motion-studies">GitHub ↗</a></span>
+      <span class="label"><a href="https://github.com/lucieoken-create/motion-studies">GitHub ↗</a> · MIT license</span>
     </footer>
   </div>
 <script>
