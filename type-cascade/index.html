@@ -27,6 +27,8 @@
   .label { font: 400 11px/1.4 var(--font-mono); letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
   .top { display: flex; justify-content: space-between; align-items: center; padding: 24px 0; border-bottom: 1px solid var(--border); }
   .top a { color: var(--ink); text-decoration: none; }
+  .top .links { display: flex; align-items: center; gap: 20px; }
+  .top .links a:hover { color: var(--ink); }
   .theme-btn { font: 400 11px/1 var(--font-mono); letter-spacing: .14em; text-transform: uppercase; color: var(--ink); background: none; border: 1px solid var(--border-strong); padding: 8px 12px; cursor: pointer; }
   .theme-btn:hover { border-color: var(--ink); }
 
@@ -56,19 +58,21 @@
 
   .foot { display: flex; justify-content: space-between; padding: 24px 0 48px; border-top: 1px solid var(--border); margin-top: 96px; }
   .foot a { color: inherit; text-decoration: none; border-bottom: 1px solid var(--border-strong); }
-  @media (max-width: 760px) { .wrap { padding: 0 24px; } .meter { display: none; } }
+  @media (max-width: 760px) { .wrap { padding: 0 24px; } .meter { display: none; } .top .links a { display: none; } }
 </style>
 </head>
 <body>
   <div class="wrap">
     <header class="top">
       <a class="label" href="../">← motion-studies</a>
-      <button class="theme-btn" id="themeBtn">Theme: hijinx</button>
+      <div class="links"><a class="label" href="https://hijinx.studio">hijinx.studio ↗</a><a class="label" href="https://github.com/lucieoken-create/motion-studies">GitHub ↗</a>
+        <button class="theme-btn" id="themeBtn">Theme: hijinx</button>
+      </div>
     </header>
     <section class="intro">
       <div class="meta"><span class="eyebrow">Motion study · type cascade</span><span class="tag pointer">Pointer</span></div>
       <h1>A word caught in a swirl</h1>
-      <p class="lead">One word, repeated, turns slowly like oil on water: quicker in the middle, slower at the rim. The shapes around the words melt together and pull apart. Move your pointer through it and the words get out of the way.</p>
+      <p class="lead">One word, repeated, turns slowly like oil on water. The shapes around the words melt together and pull apart. Your pointer pushes the words out of the way.</p>
       <label class="word">Try your own word <input type="text" id="word" maxlength="14" placeholder="type here" autocomplete="off" spellcheck="false"></label>
     </section>
   </div>
@@ -84,7 +88,7 @@
   <div class="wrap">
     <footer class="foot">
       <span class="label">Made by Lucie Oken · <a href="https://hijinx.studio">hijinx.studio</a></span>
-      <span class="label">MIT license</span>
+      <span class="label"><a href="https://github.com/lucieoken-create/motion-studies">GitHub ↗</a> · MIT license</span>
     </footer>
   </div>
 

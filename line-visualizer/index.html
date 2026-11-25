@@ -27,6 +27,8 @@
   .label { font: 400 11px/1.4 var(--font-mono); letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
   .top { display: flex; justify-content: space-between; align-items: center; padding: 24px 0; border-bottom: 1px solid var(--border); }
   .top a { color: var(--ink); text-decoration: none; }
+  .top .links { display: flex; align-items: center; gap: 20px; }
+  .top .links a:hover { color: var(--ink); }
   .theme-btn { font: 400 11px/1 var(--font-mono); letter-spacing: .14em; text-transform: uppercase; color: var(--ink); background: none; border: 1px solid var(--border-strong); padding: 8px 12px; cursor: pointer; }
   .theme-btn:hover { border-color: var(--ink); }
 
@@ -50,19 +52,21 @@
 
   .foot { display: flex; justify-content: space-between; padding: 24px 0 48px; border-top: 1px solid var(--border); margin-top: 96px; }
   .foot a { color: inherit; text-decoration: none; border-bottom: 1px solid var(--border-strong); }
-  @media (max-width: 760px) { .wrap { padding: 0 24px; } .meter { display: none; } }
+  @media (max-width: 760px) { .wrap { padding: 0 24px; } .meter { display: none; } .top .links a { display: none; } }
 </style>
 </head>
 <body>
   <div class="wrap">
     <header class="top">
       <a class="label" href="../">← motion-studies</a>
-      <button class="theme-btn" id="themeBtn">Theme: hijinx</button>
+      <div class="links"><a class="label" href="https://hijinx.studio">hijinx.studio ↗</a><a class="label" href="https://github.com/lucieoken-create/motion-studies">GitHub ↗</a>
+        <button class="theme-btn" id="themeBtn">Theme: hijinx</button>
+      </div>
     </header>
     <section class="intro">
       <div class="meta"><span class="eyebrow">Motion study · line visualizer</span><span class="tag">Scroll</span><span class="tag pointer">Pointer</span></div>
       <h1>Light that moves like music</h1>
-      <p class="lead">Three presets, like an old music visualizer, each drawn in thin bright lines on a dark screen. Beams of light that cross at one point and fan out. Ribbons of light that curl up like smoke. A burst of sparks. Scrolling switches between them, and all three gather around your pointer.</p>
+      <p class="lead">Three presets in thin bright lines, like an old music visualizer: beams of light, ribbons that curl like smoke, and a burst of sparks. Scroll to switch; all three gather around your pointer.</p>
     </section>
   </div>
 
@@ -76,7 +80,7 @@
   <div class="wrap">
     <footer class="foot">
       <span class="label">Made by Lucie Oken · <a href="https://hijinx.studio">hijinx.studio</a></span>
-      <span class="label">MIT license</span>
+      <span class="label"><a href="https://github.com/lucieoken-create/motion-studies">GitHub ↗</a> · MIT license</span>
     </footer>
   </div>
 
