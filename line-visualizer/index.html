@@ -162,11 +162,14 @@
   // whirlpool, round and round, which draws the hooked, mushroom-cap shape that smoke makes.
   const LINES = 11;                              // lines in each ribbon
   const PAIRS = 5;                               // pairs of whirlpools. the first pair sits on the focus
+  const lead = { x: 0, y: 0, set: false };       // where the pair that follows the pointer is. it trails behind, so lines already drawn are not yanked about
   let pairs = [];                                // each pair: its middle, the direction of its jet, and half the distance across it
   const stir = t => {                            // where the pairs are right now: they drift and slowly turn
     const unit = Math.min(W, H) * .125;
     const pair = (cx, cy, a, big) => pairs.push([cx, cy, Math.cos(a), Math.sin(a), unit * big]);
-    pairs = []; pair(focus.x, focus.y, t * .12, 1.15);
+    if (!lead.set) { lead.x = focus.x; lead.y = focus.y; lead.set = true; }
+    lead.x += (focus.x - lead.x) * .035; lead.y += (focus.y - lead.y) * .035;
+    pairs = []; pair(lead.x, lead.y, t * .12, 1.15);
     for (let k = 1; k < PAIRS; k++) { const a = k * 1.57 + t * .04;
       pair(W * (.5 + .3 * Math.cos(a)), H * (.5 + .27 * Math.sin(a)), k * 2.2 - t * .09 * (k % 2 ? 1 : -1), .8 + .25 * (k % 3)); }
   };
@@ -219,7 +222,7 @@
     ctx.globalCompositeOperation = 'lighter';           // where lights cross they add up and get brighter
     ctx.lineCap = 'round';
 
-    // preset 1, beams: bands of close lines that all pass through the focus, fan out with a slight bow, and slowly sweep around it. a few break up into bits
+    // preset 1, beams: bands of close lines that all pass through the focus, fan out with a slight bow, and slowly sweep around it. every third band is made of bits
     if (beams > 0) {
       const far = (W + H) * .75;
       for (let r = 0; r < BEAMS; r++) {
@@ -228,18 +231,18 @@
         const wide = (.022 + .02 * rand(r + 40)) * (1 + 1.4 * beat);   // how far its lines fan apart: wider on the beat
         const color = r % 3 === 2 ? C.surface : r % 2 ? C['accent-2'] : C.accent;
         const angle = (d, j) => turn + j / 3 * wide * (1 + .5 * Math.sin(d * .006 + r)) + bow * d * Math.min(Math.abs(d), 650);   // the bend stops growing far from the focus, so bands never curl back
-        const breaks = r % 3 === 1 ? 170 + 90 * Math.sin(t * .3 + r) : far;   // some bands break up into bits past this distance
+        const bits = r % 3 === 1;                       // every third band is drawn in bits instead of solid lines
         for (let j = -3; j <= 3; j++) {                 // each band is seven lines
-          const pts = [];
-          for (let d = -far; d <= breaks; d += 24) { const a = angle(d, j); pts.push([fx + Math.cos(a) * d, fy + Math.sin(a) * d]); }
-          light(pts, color, beams * (j ? .5 : .8));
-          // past the break the line carries on as separate bits, which thin out, scatter sideways and fade as they go
+          if (!bits) { const pts = [];
+            for (let d = -far; d <= far; d += 24) { const a = angle(d, j); pts.push([fx + Math.cos(a) * d, fy + Math.sin(a) * d]); }
+            light(pts, color, beams * (j ? .5 : .8)); continue; }
+          // a line of bits: they flow outward both ways from the focus, spreading apart, scattering sideways and fading as they go
           ctx.fillStyle = mix(color, C.bg, .45);
-          for (let d = breaks + (t * 50 + j * 9) % 13; d < far; d += 13 + (d - breaks) * .05) {
-            const gone = (d - breaks) / 520, a = angle(d, j) + (rand(Math.floor(d / 13) + j * 31 + r * 7) - .5) * .09 * gone;
-            if (gone > 1) break;
-            const big = 2.6 - 1.4 * gone;
-            ctx.globalAlpha = beams * .9 * (1 - gone); ctx.fillRect(fx + Math.cos(a) * d - big / 2, fy + Math.sin(a) * d - big / 2, big, big);
+          for (const way of [1, -1]) for (let d = 16 + (t * 50 + j * 9) % 11; d < far; d += 11 + d * .035) {
+            const gone = d / 760; if (gone > 1) break;
+            const a = angle(d * way, j) + (rand(Math.floor(d / 11) + j * 31 + r * 7 + way) - .5) * .07 * gone, big = 2.4 - 1.1 * gone;
+            ctx.globalAlpha = beams * .9 * (1 - gone) * Math.min(1, d / 50);
+            ctx.fillRect(fx + Math.cos(a) * d * way - big / 2, fy + Math.sin(a) * d * way - big / 2, big, big);
           }
         }
       }
@@ -268,12 +271,7 @@
           light(ln.tail.slice(Math.floor(n * .2), Math.ceil(n * .85)), color, show * .75, false, true);   // ...and brighter through the middle, so both ends taper away
         }
       });
-      const ring = [];                                  // one slow, wobbling outline around the focus
-      for (let n = 0; n <= 90; n++) { const a = n / 90 * Math.PI * 2;
-        const r = Math.min(W, H) * .2 * (1 + .2 * Math.sin(a * 3 + t * .4) + .1 * Math.sin(a * 5 - t * .3) + .06 * beat * Math.sin(a * 9 + t));
-        ring.push([fx + Math.cos(a) * r * 1.2, fy + Math.sin(a) * r * .9]); }
       ctx.globalCompositeOperation = 'lighter';
-      light(ring, C.bg, swirl * .6);
     }
 
     // preset 3, burst: sparks thrown out from the focus, each a short streak with a glowing dot at its head

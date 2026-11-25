@@ -249,11 +249,15 @@
 
     // remember where it was, then put each copy where the leader was LAG seconds before the copy ahead of it
     past.push({ t, x: s.x, y: s.y, color });
-    while (past.length && past[0].t < t - GHOSTS * LAG - .5) past.shift();
+    while (past.length > 2 && past[1].t < t - GHOSTS * LAG - .5) past.shift();
     if (stage.classList.contains('trailing')) trail.forEach((g, k) => {
-      let was = past[0]; for (const e of past) { if (e.t > t - (k + 1) * LAG) break; was = e; }
-      g.style.transform = `translate3d(${was.x}px, ${was.y}px, 0)`;
-      g.style.color = was.color; paint(g.querySelector('canvas'), was.color);
+      const when = t - (k + 1) * LAG;                   // the moment this copy is showing
+      let i = 0; while (i < past.length - 2 && past[i + 1].t <= when) i++;
+      // the record only has one entry per frame, so blend between the two either side of that moment.
+      // snapping to the nearer one makes a copy stutter, most visibly the last, slowest-looking one.
+      const a = past[i], b = past[i + 1] || a, mid = clamp((when - a.t) / ((b.t - a.t) || 1));
+      g.style.transform = `translate3d(${lerp(a.x, b.x, mid)}px, ${lerp(a.y, b.y, mid)}px, 0)`;
+      g.style.color = a.color; paint(g.querySelector('canvas'), a.color);
     });
     stage.classList.toggle('flash', t - s.flash < .35);
     score.textContent = `Corners ${s.corners} · Bounces ${s.bounces}`;
