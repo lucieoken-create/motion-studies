@@ -210,6 +210,14 @@
       if (rb.odd) ln.tail.pop();                        // remember every other step, and let the newest point ride along in between
       ln.tail.push([ln.x, ln.y]); if (ln.tail.length > 170) ln.tail.shift(); }
   }); };
+  // the stretch of a path between two places along it. the places can fall between recorded points
+  const part = (tail, from, to) => {
+    const last = tail.length - 1; if (last < 1) return tail;
+    const at = f => { const i = Math.min(Math.floor(f), last - 1), k = f - i;
+      return [lerp(tail[i][0], tail[i + 1][0], k), lerp(tail[i][1], tail[i + 1][1], k)]; };
+    from = clamp(from, 0, last); to = clamp(to, from, last);
+    return [at(from), ...tail.slice(Math.floor(from) + 1, Math.ceil(to)), at(to)];
+  };
   const ribbons = Array.from({ length: RIBBONS }, (_, i) => ({ n: i, life: -i * .45, age: 0, lines: [] }));
   const sparks = Array.from({ length: SPARKS }, (_, i) => ({ n: i, born: -99, life: 0 }));
 
@@ -278,9 +286,12 @@
       ribbons.forEach((rb, i) => {
         const color = i % 4 === 0 ? C['accent-2'] : i % 2 ? C.surface : mix(C.ink, C.surface, .5);
         const show = swirl * clamp(rb.age / .8) * clamp(rb.life / .8);   // ease in when new and out when spent, so nothing pops
-        for (const ln of rb.lines) { const n = ln.tail.length;
-          light(ln.tail, color, show * .3, false, true);            // the whole path, faint...
-          light(ln.tail.slice(Math.floor(n * .2), Math.ceil(n * .85)), color, show * .75, false, true);   // ...and brighter through the middle, so both ends taper away
+        // a path only records every other step, so its far end would sit still for a frame and then jump.
+        // on the in-between frames, start drawing half a step further along, and the end glides instead.
+        const half = rb.odd ? .5 : 0;
+        for (const ln of rb.lines) { const n = ln.tail.length - 1;
+          light(part(ln.tail, n < 169 ? 0 : half, n), color, show * .3, false, true);            // the whole path, faint...
+          light(part(ln.tail, n * .2 + half, n * .85 + half), color, show * .75, false, true);   // ...and brighter through the middle, so both ends taper away
         }
       });
       ctx.globalCompositeOperation = 'lighter';
