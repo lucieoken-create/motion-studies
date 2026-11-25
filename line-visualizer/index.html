@@ -129,7 +129,7 @@
   let sprites = {};
   document.addEventListener('themechange', () => { fresh = true; sprites = {}; });
 
-  const BEAMS = 8, RIBBONS = 13, SPARKS = 140;   // how many beams, ribbons of light and sparks
+  const BEAMS = 8, RIBBONS = 20, SPARKS = 140;   // how many beams, ribbons of light and sparks
   const TRAIL = .18;                             // how fast old frames fade: lower = longer smears, 1 = none
   const REST = .5;                               // the still frame shown when motion is turned off
   const PHASES = [[0, 'Beams'], [.32, 'Swirl'], [.68, 'Burst']];
@@ -165,17 +165,19 @@
   // between the two there is a jet. a ribbon sent up the jet splits at the top, half curling back into each
   // whirlpool, round and round, which draws the hooked, mushroom-cap shape that smoke makes.
   const LINES = 11;                              // lines in each ribbon
-  const PAIRS = 5;                               // pairs of whirlpools. the first pair sits on the focus
+  const PAIRS = 9;                               // pairs of whirlpools, spread over the whole stage. the first pair sits on the focus
+  const GATHER = .42;                            // how strongly everything is drawn in toward the focus. 0 = not at all
   const lead = { x: 0, y: 0, set: false };       // where the pair that follows the pointer is. it trails behind, so lines already drawn are not yanked about
   let pairs = [];                                // each pair: its middle, the direction of its jet, and half the distance across it
   const stir = t => {                            // where the pairs are right now: they drift and slowly turn
     const unit = Math.min(W, H) * .125;
     const pair = (cx, cy, a, big) => pairs.push([cx, cy, Math.cos(a), Math.sin(a), unit * big]);
     if (!lead.set) { lead.x = focus.x; lead.y = focus.y; lead.set = true; }
-    lead.x += (focus.x - lead.x) * .035; lead.y += (focus.y - lead.y) * .035;
-    pairs = []; pair(lead.x, lead.y, t * .12, 1.15);
-    for (let k = 1; k < PAIRS; k++) { const a = k * 1.57 + t * .04;
-      pair(W * (.5 + .3 * Math.cos(a)), H * (.5 + .27 * Math.sin(a)), k * 2.2 - t * .09 * (k % 2 ? 1 : -1), .8 + .25 * (k % 3)); }
+    lead.x += (focus.x - lead.x) * .05; lead.y += (focus.y - lead.y) * .05;
+    pairs = []; pair(lead.x, lead.y, t * .12, 1.5);
+    for (let k = 1; k < PAIRS; k++) {                   // the rest sit on two rings, an inner one and one out near the edges
+      const a = k / (PAIRS - 1) * Math.PI * 2 + t * .04 * (k % 2 ? 1 : -1), out = k % 2 ? .42 : .22;
+      pair(W * (.5 + out * Math.cos(a)), H * (.5 + out * .95 * Math.sin(a)), k * 2.2 - t * .09 * (k % 2 ? 1 : -1), .85 + .2 * (k % 3)); }
   };
   const current = (x, y) => {                    // how fast and which way the current flows at a point
     let vx = 0, vy = 0;
@@ -187,12 +189,18 @@
       const dx = x - cx, dy = y - cy, back = .3 * Math.exp(-(dx * dx + dy * dy) / (g * g * 12));
       vx -= jx * back; vy -= jy * back;
     }
-    return [vx, vy];
+    // the gather: a pull toward the focus. it only reaches about a third of the way across the stage,
+    // so lines near the pointer crowd in on it while the rest of the stage stays filled
+    const gx = lead.x - x, gy = lead.y - y, far = Math.hypot(gx, gy) + 1, reach = Math.min(W, H) * .3;
+    const draw = GATHER * Math.exp(-far * far / (reach * reach)) * Math.min(1, far / 60);
+    return [vx + gx / far * draw, vy + gy / far * draw];
   };
   const moveRibbons = (dt, t, speed) => { stir(t); ribbons.forEach(rb => {
     if (rb.life <= 0) {                                 // spent: send a fresh ribbon up the jet of one of the pairs
       rb.n += RIBBONS; rb.life = 7 + rand(rb.n + .3) * 5; rb.age = 0; rb.odd = 0;
-      const [cx, cy, jx, jy, g] = pairs[Math.floor(rand(rb.n) * PAIRS)], back = g * (.5 + rand(rb.n + .5) * 1.1);
+      // take the pairs in turn so every part of the stage gets ribbons, with every fourth one going to the pair on the focus
+      const turn = Math.floor(rb.n / RIBBONS) + rb.n % RIBBONS, which = turn % 4 === 0 ? 0 : 1 + (turn - Math.ceil(turn / 4)) % (PAIRS - 1);
+      const [cx, cy, jx, jy, g] = pairs[which], back = g * (.5 + rand(rb.n + .5) * 1.1);
       rb.lines = Array.from({ length: LINES }, (_, k) => { const off = (k / (LINES - 1) - .5) * g * 1.7;   // spread across the jet
         return { x: cx - jx * back - jy * off, y: cy - jy * back + jx * off, tail: [] }; });
     }
